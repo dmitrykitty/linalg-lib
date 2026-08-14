@@ -1,0 +1,34 @@
+# CMake build trees and generated files
+/build/
+/out/
+CMakeUserPresets.json
+compile_commands.json
+Testing/
+
+# Compiler and linker output
+*.a
+*.so
+*.so.*
+*.o
+*.obj
+*.dll
+*.dylib
+*.exe
+
+# Sanitizer, coverage, and profiler output
+*.gcda
+*.gcno
+*.gcov
+coverage/
+perf.data
+perf.data.old
+
+# Editor and operating-system files
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
