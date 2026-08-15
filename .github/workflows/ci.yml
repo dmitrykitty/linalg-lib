@@ -1,0 +1,38 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        compiler:
+          - g++
+          - clang++
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Configure
+        run: >-
+          cmake --preset release
+          -DCMAKE_CXX_COMPILER=${{ matrix.compiler }}
+          -DLINALG_WARNINGS_AS_ERRORS=ON
+
+      - name: Build
+        run: cmake --build --preset release --parallel 2
+
+      - name: Test
+        run: ctest --preset release
+
+      - name: Benchmark framework smoke check
+        run: ./build/release/benchmarks/linalg_benchmarks --benchmark_dry_run
+
