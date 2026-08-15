@@ -1,0 +1,8 @@
+add_executable(linalg_basic_usage basic_usage.cpp)
+
+target_link_libraries(linalg_basic_usage PRIVATE linalg::linalg)
+target_compile_features(linalg_basic_usage PRIVATE cxx_std_20)
+
+linalg_set_project_warnings(linalg_basic_usage)
+linalg_enable_sanitizers(linalg_basic_usage)
+
