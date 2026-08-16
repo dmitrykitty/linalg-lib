@@ -14,6 +14,8 @@ TEST(MatrixTest, DefaultConstructionCreatesAnEmptyMatrix) {
 
     EXPECT_EQ(matrix.rows(), 0);
     EXPECT_EQ(matrix.cols(), 0);
+    EXPECT_EQ(matrix.size(), 0);
+    EXPECT_TRUE(matrix.empty());
 }
 
 TEST(MatrixTest, ConstructionInitializesDimensionsAndValues) {
@@ -22,6 +24,8 @@ TEST(MatrixTest, ConstructionInitializesDimensionsAndValues) {
 
     EXPECT_EQ(zero_matrix.rows(), 2);
     EXPECT_EQ(zero_matrix.cols(), 3);
+    EXPECT_EQ(zero_matrix.size(), 6);
+    EXPECT_FALSE(zero_matrix.empty());
 
     for (linalg::Matrix::size_type row = 0; row < 2; ++row) {
         for (linalg::Matrix::size_type col = 0; col < 3; ++col) {
@@ -103,8 +107,12 @@ TEST(MatrixTest, SupportsZeroDimensionsAndRejectsImpossibleStorageSize) {
 
     EXPECT_EQ(zero_rows.rows(), 0);
     EXPECT_EQ(zero_rows.cols(), 4);
+    EXPECT_EQ(zero_rows.size(), 0);
+    EXPECT_TRUE(zero_rows.empty());
     EXPECT_EQ(zero_cols.rows(), 4);
     EXPECT_EQ(zero_cols.cols(), 0);
+    EXPECT_EQ(zero_cols.size(), 0);
+    EXPECT_TRUE(zero_cols.empty());
 
     constexpr auto maximum = std::numeric_limits<linalg::Matrix::size_type>::max();
     EXPECT_THROW((void)linalg::Matrix(maximum, 2), std::length_error);

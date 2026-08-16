@@ -30,6 +30,14 @@ public:
         return cols_;
     }
 
+    size_type size() const noexcept {
+        return data_.size();
+    }
+
+    bool empty() const noexcept {
+        return data_.empty();
+    }
+
     const double* data() const noexcept {
         return data_.data();
     }
