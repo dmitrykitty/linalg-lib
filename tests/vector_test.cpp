@@ -6,6 +6,7 @@
 #include <stdexcept>
 #include <type_traits>
 #include <utility>
+#include <vector>
 
 TEST(VectorTest, DefaultConstructionCreatesAnEmptyVector) {
     const linalg::Vector vector;
@@ -33,6 +34,38 @@ TEST(VectorTest, FillConstructionStoresValuesContiguously) {
     EXPECT_DOUBLE_EQ(vector[2], 7.0);
     EXPECT_EQ(&vector[0], vector.data());
     EXPECT_EQ(&vector[2], vector.data() + 2);
+}
+
+TEST(VectorTest, InitializerListConstructionStoresProvidedValues) {
+    const linalg::Vector vector{1.0, 2.0, 3.0};
+
+    ASSERT_EQ(vector.size(), 3);
+    EXPECT_DOUBLE_EQ(vector[0], 1.0);
+    EXPECT_DOUBLE_EQ(vector[1], 2.0);
+    EXPECT_DOUBLE_EQ(vector[2], 3.0);
+}
+
+TEST(VectorTest, SpanConstructionCopiesValuesFromContiguousSequence) {
+    std::vector<double> values{4.0, 5.0, 6.0};
+    linalg::Vector vector(values);
+
+    values[0] = 99.0;
+
+    ASSERT_EQ(vector.size(), 3);
+    EXPECT_DOUBLE_EQ(vector[0], 4.0);
+    EXPECT_DOUBLE_EQ(vector[1], 5.0);
+    EXPECT_DOUBLE_EQ(vector[2], 6.0);
+    EXPECT_NE(vector.data(), values.data());
+}
+
+TEST(VectorTest, BracesRepresentValuesWhileParenthesesRepresentSize) {
+    const linalg::Vector one_value{3.0};
+    const linalg::Vector three_zeroes(3);
+
+    ASSERT_EQ(one_value.size(), 1);
+    EXPECT_DOUBLE_EQ(one_value[0], 3.0);
+    EXPECT_EQ(three_zeroes.size(), 3);
+    EXPECT_DOUBLE_EQ(three_zeroes[0], 0.0);
 }
 
 TEST(VectorTest, AtChecksBoundsForMutableAndConstVectors) {

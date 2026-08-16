@@ -10,6 +10,10 @@ Vector::Vector(size_type size) : Vector(size, 0.0) {}
 
 Vector::Vector(size_type size, double value) : data_(checked_size(size), value) {}
 
+Vector::Vector(std::initializer_list<double> values) : data_(values) {}
+
+Vector::Vector(std::span<const double> values) : data_(values.begin(), values.end()) {}
+
 Vector::Vector(Vector&& other) noexcept : data_(std::move(other.data_)) {
     other.data_.clear();
 }

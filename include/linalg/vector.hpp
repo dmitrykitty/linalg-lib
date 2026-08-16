@@ -1,6 +1,8 @@
 #pragma once
 
 #include <cstddef>
+#include <initializer_list>
+#include <span>
 #include <vector>
 
 namespace linalg {
@@ -12,6 +14,8 @@ public:
     Vector() = default;
     explicit Vector(size_type size);
     Vector(size_type size, double value);
+    Vector(std::initializer_list<double> values);
+    explicit Vector(std::span<const double> values);
     Vector(const Vector&) = default;
     Vector(Vector&& other) noexcept;
     ~Vector() = default;
