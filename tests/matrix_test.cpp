@@ -6,6 +6,7 @@
 #include <stdexcept>
 #include <type_traits>
 #include <utility>
+#include <vector>
 
 TEST(MatrixTest, DefaultConstructionCreatesAnEmptyMatrix) {
     static_assert(std::is_default_constructible_v<linalg::Matrix>);
@@ -33,6 +34,76 @@ TEST(MatrixTest, ConstructionInitializesDimensionsAndValues) {
             EXPECT_DOUBLE_EQ(filled_matrix(row, col), 4.5);
         }
     }
+}
+
+TEST(MatrixTest, FlatInitializerListFillsMatrixInRowMajorOrder) {
+    const linalg::Matrix matrix(2, 2, {1.0, 2.0, 3.0, 4.0});
+
+    EXPECT_EQ(matrix.rows(), 2);
+    EXPECT_EQ(matrix.cols(), 2);
+    EXPECT_DOUBLE_EQ(matrix(0, 0), 1.0);
+    EXPECT_DOUBLE_EQ(matrix(0, 1), 2.0);
+    EXPECT_DOUBLE_EQ(matrix(1, 0), 3.0);
+    EXPECT_DOUBLE_EQ(matrix(1, 1), 4.0);
+}
+
+TEST(MatrixTest, FlatInitializerListPadsMissingValuesWithZeros) {
+    const linalg::Matrix matrix(2, 3, {1.0, 2.0, 3.0, 4.0});
+
+    EXPECT_EQ(matrix.size(), 6);
+    EXPECT_DOUBLE_EQ(matrix(0, 0), 1.0);
+    EXPECT_DOUBLE_EQ(matrix(0, 1), 2.0);
+    EXPECT_DOUBLE_EQ(matrix(0, 2), 3.0);
+    EXPECT_DOUBLE_EQ(matrix(1, 0), 4.0);
+    EXPECT_DOUBLE_EQ(matrix(1, 1), 0.0);
+    EXPECT_DOUBLE_EQ(matrix(1, 2), 0.0);
+}
+
+TEST(MatrixTest, FlatSequenceAcceptsVectorAndRejectsExcessValues) {
+    const std::vector<double> values{1.0, 2.0, 3.0, 4.0};
+    const linalg::Matrix matrix(2, 2, values);
+
+    EXPECT_DOUBLE_EQ(matrix(1, 1), 4.0);
+    EXPECT_THROW((void)linalg::Matrix(1, 2, {1.0, 2.0, 3.0}), std::invalid_argument);
+}
+
+TEST(MatrixTest, NestedInitializerListsCreateMatrixInRowMajorOrder) {
+    const linalg::Matrix matrix{{1.0, 2.0}, {3.0, 4.0}};
+
+    EXPECT_EQ(matrix.rows(), 2);
+    EXPECT_EQ(matrix.cols(), 2);
+    EXPECT_EQ(matrix.size(), 4);
+    EXPECT_DOUBLE_EQ(matrix(0, 0), 1.0);
+    EXPECT_DOUBLE_EQ(matrix(0, 1), 2.0);
+    EXPECT_DOUBLE_EQ(matrix(1, 0), 3.0);
+    EXPECT_DOUBLE_EQ(matrix(1, 1), 4.0);
+}
+
+TEST(MatrixTest, NestedInitializerListsPadShorterRowsWithZeros) {
+    const linalg::Matrix matrix{{1.0, 2.0, 3.0}, {4.0}, {5.0, 6.0}};
+
+    ASSERT_EQ(matrix.rows(), 3);
+    ASSERT_EQ(matrix.cols(), 3);
+    EXPECT_DOUBLE_EQ(matrix(0, 2), 3.0);
+    EXPECT_DOUBLE_EQ(matrix(1, 0), 4.0);
+    EXPECT_DOUBLE_EQ(matrix(1, 1), 0.0);
+    EXPECT_DOUBLE_EQ(matrix(1, 2), 0.0);
+    EXPECT_DOUBLE_EQ(matrix(2, 0), 5.0);
+    EXPECT_DOUBLE_EQ(matrix(2, 1), 6.0);
+    EXPECT_DOUBLE_EQ(matrix(2, 2), 0.0);
+}
+
+TEST(MatrixTest, NestedInitializerListsSupportEmptyRows) {
+    const linalg::Matrix matrix{{}, {7.0, 8.0}, {}};
+
+    ASSERT_EQ(matrix.rows(), 3);
+    ASSERT_EQ(matrix.cols(), 2);
+    EXPECT_DOUBLE_EQ(matrix(0, 0), 0.0);
+    EXPECT_DOUBLE_EQ(matrix(0, 1), 0.0);
+    EXPECT_DOUBLE_EQ(matrix(1, 0), 7.0);
+    EXPECT_DOUBLE_EQ(matrix(1, 1), 8.0);
+    EXPECT_DOUBLE_EQ(matrix(2, 0), 0.0);
+    EXPECT_DOUBLE_EQ(matrix(2, 1), 0.0);
 }
 
 TEST(MatrixTest, StoresElementsInRowMajorOrder) {

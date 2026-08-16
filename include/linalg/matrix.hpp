@@ -1,6 +1,8 @@
 #pragma once
 
 #include <cstddef>
+#include <initializer_list>
+#include <span>
 #include <vector>
 
 namespace linalg {
@@ -12,6 +14,9 @@ public:
     Matrix() = default;
     Matrix(size_type rows, size_type cols);
     Matrix(size_type rows, size_type cols, double value);
+    Matrix(size_type rows, size_type cols, std::initializer_list<double> values);
+    Matrix(size_type rows, size_type cols, std::span<const double> values);
+    Matrix(std::initializer_list<std::initializer_list<double>> rows);
     Matrix(const Matrix&) = default;
     Matrix(Matrix&& other) noexcept;
     ~Matrix() = default;
