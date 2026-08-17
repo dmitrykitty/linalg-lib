@@ -23,6 +23,12 @@ public:
     Vector& operator=(const Vector&) = default;
     Vector& operator=(Vector&& other) noexcept;
 
+    Vector& operator+=(const Vector& other);
+    Vector& operator-=(const Vector& other);
+    Vector& operator+=(double scalar) noexcept;
+    Vector& operator-=(double scalar) noexcept;
+    Vector& operator*=(double scalar) noexcept;
+
     const double& operator[](size_type index) const noexcept;
     double& operator[](size_type index) noexcept;
 

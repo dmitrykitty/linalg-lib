@@ -130,3 +130,59 @@ TEST(VectorTest, SupportsZeroSizeAndRejectsImpossibleStorageSize) {
     EXPECT_THROW((void)linalg::Vector(maximum), std::length_error);
 }
 
+
+TEST(VectorArithmeticTest, CompoundVectorOperationsUpdateInPlace) {
+    linalg::Vector vector{1.0, 2.0, 3.0};
+    const linalg::Vector other{10.0, 20.0, 30.0};
+
+    EXPECT_EQ(&(vector += other), &vector);
+    EXPECT_DOUBLE_EQ(vector[0], 11.0);
+    EXPECT_DOUBLE_EQ(vector[1], 22.0);
+    EXPECT_DOUBLE_EQ(vector[2], 33.0);
+
+    EXPECT_EQ(&(vector -= other), &vector);
+    EXPECT_DOUBLE_EQ(vector[0], 1.0);
+    EXPECT_DOUBLE_EQ(vector[1], 2.0);
+    EXPECT_DOUBLE_EQ(vector[2], 3.0);
+}
+
+TEST(VectorArithmeticTest, RejectsDifferentSizesBeforeMutation) {
+    linalg::Vector vector{1.0, 2.0};
+    const linalg::Vector wrong_size{10.0};
+
+    EXPECT_THROW(vector += wrong_size, std::invalid_argument);
+    EXPECT_DOUBLE_EQ(vector[0], 1.0);
+    EXPECT_DOUBLE_EQ(vector[1], 2.0);
+
+    EXPECT_THROW(vector -= wrong_size, std::invalid_argument);
+    EXPECT_DOUBLE_EQ(vector[0], 1.0);
+    EXPECT_DOUBLE_EQ(vector[1], 2.0);
+}
+
+TEST(VectorArithmeticTest, ScalarCompoundOperationsUpdateEveryElement) {
+    static_assert(noexcept(std::declval<linalg::Vector&>() += 1.0));
+    static_assert(noexcept(std::declval<linalg::Vector&>() -= 1.0));
+    static_assert(noexcept(std::declval<linalg::Vector&>() *= 1.0));
+
+    linalg::Vector vector{1.0, 2.0, 3.0};
+
+    EXPECT_EQ(&(vector += 5.0), &vector);
+    EXPECT_EQ(&(vector -= 2.0), &vector);
+    EXPECT_EQ(&(vector *= 3.0), &vector);
+
+    EXPECT_DOUBLE_EQ(vector[0], 12.0);
+    EXPECT_DOUBLE_EQ(vector[1], 15.0);
+    EXPECT_DOUBLE_EQ(vector[2], 18.0);
+}
+
+TEST(VectorArithmeticTest, EmptyVectorSupportsCompoundOperations) {
+    linalg::Vector vector;
+    const linalg::Vector other;
+
+    EXPECT_NO_THROW(vector += other);
+    EXPECT_NO_THROW(vector -= other);
+    EXPECT_EQ(&(vector += 1.0), &vector);
+    EXPECT_EQ(&(vector -= 1.0), &vector);
+    EXPECT_EQ(&(vector *= 2.0), &vector);
+    EXPECT_TRUE(vector.empty());
+}

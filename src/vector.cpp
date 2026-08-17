@@ -28,6 +28,49 @@ Vector& Vector::operator=(Vector&& other) noexcept {
     return *this;
 }
 
+Vector& Vector::operator+=(const Vector& other) {
+    if (size() != other.size()) {
+        throw std::invalid_argument("vector sizes must match for addition");
+    }
+
+    for (size_type index = 0; index < size(); ++index) {
+        data_[index] += other.data_[index];
+    }
+    return *this;
+}
+
+Vector& Vector::operator-=(const Vector& other) {
+    if (size() != other.size()) {
+        throw std::invalid_argument("vector sizes must match for subtraction");
+    }
+
+    for (size_type index = 0; index < size(); ++index) {
+        data_[index] -= other.data_[index];
+    }
+    return *this;
+}
+
+Vector& Vector::operator+=(double scalar) noexcept {
+    for (double& value : data_) {
+        value += scalar;
+    }
+    return *this;
+}
+
+Vector& Vector::operator-=(double scalar) noexcept {
+    for (double& value : data_) {
+        value -= scalar;
+    }
+    return *this;
+}
+
+Vector& Vector::operator*=(double scalar) noexcept {
+    for (double& value : data_) {
+        value *= scalar;
+    }
+    return *this;
+}
+
 const double& Vector::operator[](size_type index) const noexcept {
     assert(index < size());
     return data_[index];
