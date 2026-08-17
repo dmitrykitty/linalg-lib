@@ -33,6 +33,7 @@ target_sources(
     linalg
     PRIVATE
         src/matrix.cpp
+        src/operations.cpp
         src/vector.cpp
     PUBLIC
         FILE_SET public_headers
@@ -41,6 +42,7 @@ target_sources(
         FILES
             include/linalg/linalg.hpp
             include/linalg/matrix.hpp
+            include/linalg/operations.hpp
             include/linalg/vector.hpp
 )
 
