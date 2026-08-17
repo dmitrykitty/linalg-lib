@@ -109,6 +109,20 @@ Matrix& Matrix::operator-=(const Matrix& o) {
     return *this;
 }
 
+Matrix& Matrix::operator+=(double scalar) noexcept {
+    for (double& value : data_) {
+        value += scalar;
+    }
+    return *this;
+}
+
+Matrix& Matrix::operator-=(double scalar) noexcept {
+    for (double& value : data_) {
+        value -= scalar;
+    }
+    return *this;
+}
+
 Matrix& Matrix::operator*=(double scalar) noexcept {
     for(size_type i = 0; i < data_.size(); ++i) {
         data_[i] *= scalar;

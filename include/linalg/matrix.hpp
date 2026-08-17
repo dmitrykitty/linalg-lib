@@ -29,6 +29,8 @@ public:
 
     Matrix& operator+=(const Matrix&);
     Matrix& operator-=(const Matrix&);
+    Matrix& operator+=(double scalar) noexcept;
+    Matrix& operator-=(double scalar) noexcept;
     Matrix& operator*=(double) noexcept;
 
     size_type rows() const noexcept {
