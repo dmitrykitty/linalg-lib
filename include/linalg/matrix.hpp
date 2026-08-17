@@ -27,6 +27,10 @@ public:
     const double& operator()(size_type row, size_type col) const noexcept;
     double& operator()(size_type row, size_type col) noexcept;
 
+    Matrix& operator+=(const Matrix&);
+    Matrix& operator-=(const Matrix&);
+    Matrix& operator*=(double) noexcept;
+
     size_type rows() const noexcept {
         return rows_;
     }

@@ -87,6 +87,35 @@ double& Matrix::operator()(size_type row, size_type col) noexcept {
     return data_[row * cols_ + col];
 }
 
+Matrix& Matrix::operator+=(const Matrix& o) {
+    if(rows_ != o.rows_ || cols_ != o.cols_) {
+        throw std::invalid_argument("matrix has wrong size");
+    }
+
+    for(size_type i = 0; i < data_.size(); ++i) {
+        data_[i] += o.data_[i];
+    }
+    return *this;
+}
+
+Matrix& Matrix::operator-=(const Matrix& o) {
+    if(rows_ != o.rows_ || cols_ != o.cols_) {
+        throw std::invalid_argument("matrix has wrong size");
+    }
+
+    for(size_type i = 0; i < data_.size(); ++i) {
+        data_[i] -= o.data_[i];
+    }
+    return *this;
+}
+
+Matrix& Matrix::operator*=(double scalar) noexcept {
+    for(size_type i = 0; i < data_.size(); ++i) {
+        data_[i] *= scalar;
+    }
+    return *this;
+}
+
 const double& Matrix::at(size_type row, size_type col) const {
     if (row >= rows_ || col >= cols_) {
         throw std::out_of_range("matrix index is out of range");
