@@ -1,5 +1,7 @@
 #include <linalg/matrix.hpp>
 
+#include "support/approximate.hpp"
+
 #include <gtest/gtest.h>
 
 #include <limits>
@@ -187,4 +189,41 @@ TEST(MatrixTest, SupportsZeroDimensionsAndRejectsImpossibleStorageSize) {
 
     constexpr auto maximum = std::numeric_limits<linalg::Matrix::size_type>::max();
     EXPECT_THROW((void)linalg::Matrix(maximum, 2), std::length_error);
+}
+
+TEST(MatrixFunctionOperatorTest, AdditionAndSubtractionReturnNewMatrices) {
+    const linalg::Matrix left{{1.0, 2.0}, {3.0, 4.0}};
+    const linalg::Matrix right{{10.0, 20.0}, {30.0, 40.0}};
+
+    const linalg::Matrix sum = left + right;
+    const linalg::Matrix difference = right - left;
+
+    EXPECT_TRUE(linalg::test::almost_equal(
+        sum, linalg::Matrix{{11.0, 22.0}, {33.0, 44.0}}, 0.0, 0.0));
+    EXPECT_TRUE(linalg::test::almost_equal(
+        difference, linalg::Matrix{{9.0, 18.0}, {27.0, 36.0}}, 0.0, 0.0));
+    EXPECT_TRUE(linalg::test::almost_equal(
+        left, linalg::Matrix{{1.0, 2.0}, {3.0, 4.0}}, 0.0, 0.0));
+    EXPECT_TRUE(linalg::test::almost_equal(
+        right, linalg::Matrix{{10.0, 20.0}, {30.0, 40.0}}, 0.0, 0.0));
+}
+
+TEST(MatrixFunctionOperatorTest, ScalarMultiplicationWorksInBothOrders) {
+    const linalg::Matrix matrix{{1.0, -2.0}, {3.5, 4.0}};
+    const linalg::Matrix expected{{2.0, -4.0}, {7.0, 8.0}};
+
+    EXPECT_TRUE(linalg::test::almost_equal(matrix * 2.0, expected, 0.0, 0.0));
+    EXPECT_TRUE(linalg::test::almost_equal(2.0 * matrix, expected, 0.0, 0.0));
+    EXPECT_TRUE(linalg::test::almost_equal(
+        matrix, linalg::Matrix{{1.0, -2.0}, {3.5, 4.0}}, 0.0, 0.0));
+}
+
+TEST(MatrixFunctionOperatorTest, AdditionAndSubtractionRejectDifferentShapes) {
+    const linalg::Matrix matrix(2, 2, 1.0);
+    const linalg::Matrix wrong_shape(1, 4, 2.0);
+
+    EXPECT_THROW((void)(matrix + wrong_shape), std::invalid_argument);
+    EXPECT_THROW((void)(matrix - wrong_shape), std::invalid_argument);
+    EXPECT_TRUE(linalg::test::almost_equal(
+        matrix, linalg::Matrix(2, 2, 1.0), 0.0, 0.0));
 }

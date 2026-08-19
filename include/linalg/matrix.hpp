@@ -68,5 +68,10 @@ private:
     std::vector<double> data_;
 };
 
+Matrix operator+(Matrix left, const Matrix& right);
+Matrix operator-(Matrix left, const Matrix& right);
+Matrix operator*(Matrix matrix, double scalar);
+Matrix operator*(double scalar, Matrix matrix);
+
 } // namespace linalg
 

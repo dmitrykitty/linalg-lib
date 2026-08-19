@@ -153,4 +153,26 @@ Matrix::size_type Matrix::checked_element_count(size_type rows, size_type cols) 
     return rows * cols;
 }
 
+//==========================FUNCTION OPERATORS====================================
+
+Matrix operator+(Matrix left, const Matrix& right) {
+    left += right;
+    return left;
+}
+
+Matrix operator-(Matrix left, const Matrix& right) {
+    left -= right;
+    return left;
+}
+
+Matrix operator*(Matrix matrix, double scalar) {
+    matrix *= scalar;
+    return matrix;
+}
+
+Matrix operator*(double scalar, Matrix matrix) {
+    matrix *= scalar;
+    return matrix;
+}
+
 } // namespace linalg
