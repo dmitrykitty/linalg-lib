@@ -1,5 +1,7 @@
 #include <linalg/vector.hpp>
 
+#include "support/approximate.hpp"
+
 #include <gtest/gtest.h>
 
 #include <limits>
@@ -185,4 +187,41 @@ TEST(VectorArithmeticTest, EmptyVectorSupportsCompoundOperations) {
     EXPECT_EQ(&(vector -= 1.0), &vector);
     EXPECT_EQ(&(vector *= 2.0), &vector);
     EXPECT_TRUE(vector.empty());
+}
+
+TEST(VectorFunctionOperatorTest, AdditionAndSubtractionReturnNewVectors) {
+    const linalg::Vector left{1.0, 2.0, 3.0};
+    const linalg::Vector right{10.0, 20.0, 30.0};
+
+    const linalg::Vector sum = left + right;
+    const linalg::Vector difference = right - left;
+
+    EXPECT_TRUE(linalg::test::almost_equal(
+        sum, linalg::Vector{11.0, 22.0, 33.0}, 0.0, 0.0));
+    EXPECT_TRUE(linalg::test::almost_equal(
+        difference, linalg::Vector{9.0, 18.0, 27.0}, 0.0, 0.0));
+    EXPECT_TRUE(linalg::test::almost_equal(
+        left, linalg::Vector{1.0, 2.0, 3.0}, 0.0, 0.0));
+    EXPECT_TRUE(linalg::test::almost_equal(
+        right, linalg::Vector{10.0, 20.0, 30.0}, 0.0, 0.0));
+}
+
+TEST(VectorFunctionOperatorTest, ScalarMultiplicationWorksInBothOrders) {
+    const linalg::Vector vector{1.0, -2.0, 3.5};
+    const linalg::Vector expected{2.0, -4.0, 7.0};
+
+    EXPECT_TRUE(linalg::test::almost_equal(vector * 2.0, expected, 0.0, 0.0));
+    EXPECT_TRUE(linalg::test::almost_equal(2.0 * vector, expected, 0.0, 0.0));
+    EXPECT_TRUE(linalg::test::almost_equal(
+        vector, linalg::Vector{1.0, -2.0, 3.5}, 0.0, 0.0));
+}
+
+TEST(VectorFunctionOperatorTest, AdditionAndSubtractionRejectDifferentSizes) {
+    const linalg::Vector vector{1.0, 2.0};
+    const linalg::Vector wrong_size{3.0};
+
+    EXPECT_THROW((void)(vector + wrong_size), std::invalid_argument);
+    EXPECT_THROW((void)(vector - wrong_size), std::invalid_argument);
+    EXPECT_TRUE(linalg::test::almost_equal(
+        vector, linalg::Vector{1.0, 2.0}, 0.0, 0.0));
 }

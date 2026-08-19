@@ -57,5 +57,10 @@ private:
     std::vector<double> data_;
 };
 
+Vector operator+(Vector left, const Vector& right);
+Vector operator-(Vector left, const Vector& right);
+Vector operator*(Vector vector, double scalar);
+Vector operator*(double scalar, Vector vector);
+
 } // namespace linalg
 

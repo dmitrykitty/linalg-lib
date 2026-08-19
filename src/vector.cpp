@@ -102,5 +102,25 @@ Vector::size_type Vector::checked_size(size_type size) {
     return size;
 }
 
+Vector operator+(Vector left, const Vector& right) {
+    left += right;
+    return left;
+}
+
+Vector operator-(Vector left, const Vector& right) {
+    left -= right;
+    return left;
+}
+
+Vector operator*(Vector vector, double scalar) {
+    vector *= scalar;
+    return vector;
+}
+
+Vector operator*(double scalar, Vector vector) {
+    vector *= scalar;
+    return vector;
+}
+
 } // namespace linalg
 
