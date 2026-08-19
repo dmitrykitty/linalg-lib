@@ -2,6 +2,7 @@ include(GoogleTest)
 
 add_executable(
     linalg_tests
+    approximate_test.cpp
     matrix_test.cpp
     operations_test.cpp
     vector_test.cpp
