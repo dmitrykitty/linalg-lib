@@ -75,18 +75,6 @@ Matrix& Matrix::operator=(Matrix&& o) noexcept {
     return *this;
 }
 
-const double& Matrix::operator()(size_type row, size_type col) const noexcept {
-    assert(row < rows_);
-    assert(col < cols_);
-    return data_[row * cols_ + col];
-}
-
-double& Matrix::operator()(size_type row, size_type col) noexcept {
-    assert(row < rows_);
-    assert(col < cols_);
-    return data_[row * cols_ + col];
-}
-
 Matrix& Matrix::operator+=(const Matrix& o) {
     if(rows_ != o.rows_ || cols_ != o.cols_) {
         throw std::invalid_argument("matrix has wrong size");

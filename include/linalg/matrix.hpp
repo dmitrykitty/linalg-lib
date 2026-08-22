@@ -3,6 +3,7 @@
 #include <cstddef>
 #include <initializer_list>
 #include <span>
+#include <cassert>
 #include <vector>
 
 namespace linalg {
@@ -24,8 +25,19 @@ public:
     Matrix& operator=(Matrix&& other) noexcept;
     Matrix& operator=(const Matrix&) = default;
 
-    const double& operator()(size_type row, size_type col) const noexcept;
-    double& operator()(size_type row, size_type col) noexcept;
+    //inline for compile optimization
+    const double& operator()(size_type row, size_type col) const noexcept {
+        assert(row < rows_);
+        assert(col < cols_);
+        return data_[row * cols_ + col];
+    }
+
+    //inline for compile optimization
+    double& operator()(size_type row, size_type col) noexcept {
+        assert(row < rows_);
+        assert(col < cols_);
+        return data_[row * cols_ + col];
+    }
 
     Matrix& operator+=(const Matrix&);
     Matrix& operator-=(const Matrix&);

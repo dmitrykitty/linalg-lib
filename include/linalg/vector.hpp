@@ -29,8 +29,17 @@ public:
     Vector& operator-=(double scalar) noexcept;
     Vector& operator*=(double scalar) noexcept;
 
-    const double& operator[](size_type index) const noexcept;
-    double& operator[](size_type index) noexcept;
+    //inline for compile optimization
+    const double& operator[](size_type index) const noexcept {
+        assert(index < size());
+        return data_[index];
+    }
+
+    //inline for compile optimization
+    double& operator[](size_type index) noexcept {
+        assert(index < size());
+        return data_[index];
+    }
 
     size_type size() const noexcept {
         return data_.size();

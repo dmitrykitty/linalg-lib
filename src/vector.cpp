@@ -71,16 +71,6 @@ Vector& Vector::operator*=(double scalar) noexcept {
     return *this;
 }
 
-const double& Vector::operator[](size_type index) const noexcept {
-    assert(index < size());
-    return data_[index];
-}
-
-double& Vector::operator[](size_type index) noexcept {
-    assert(index < size());
-    return data_[index];
-}
-
 const double& Vector::at(size_type index) const {
     if (index >= size()) {
         throw std::out_of_range("vector index is out of range");
