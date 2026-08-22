@@ -4,6 +4,7 @@
 #include <initializer_list>
 #include <span>
 #include <vector>
+#include <cassert>
 
 namespace linalg {
 
