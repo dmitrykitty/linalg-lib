@@ -1,7 +1,10 @@
 add_executable(
     linalg_benchmarks
-    operations_benchmark.cpp
+    benchmark_main.cpp
+    broadcast_benchmark.cpp
     smoke_benchmark.cpp
+    trace_benchmark.cpp
+    transpose_benchmark.cpp
 )
 
 target_link_libraries(linalg_benchmarks PRIVATE linalg::linalg benchmark::benchmark)

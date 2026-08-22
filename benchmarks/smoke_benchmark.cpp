@@ -2,7 +2,9 @@
 
 #include <benchmark/benchmark.h>
 
-static void BM_FrameworkSmoke(benchmark::State& state) {
+namespace {
+
+void BM_FrameworkSmoke(benchmark::State& state) {
     for (auto _ : state) {
         (void)_;
         linalg::Matrix matrix;
@@ -10,6 +12,7 @@ static void BM_FrameworkSmoke(benchmark::State& state) {
     }
 }
 
+} // namespace
+
 BENCHMARK(BM_FrameworkSmoke);
-BENCHMARK_MAIN();
 
