@@ -148,3 +148,46 @@ TEST(MatrixRepeatTest, SupportsEmptyVectorsAndZeroRepeatCounts) {
     EXPECT_EQ(zero_columns.cols(), 0);
     EXPECT_TRUE(zero_columns.empty());
 }
+
+TEST(MatrixTransposeTest, TransposesRectangularMatrixWithoutChangingInput) {
+    const linalg::Matrix matrix{{1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}};
+
+    const linalg::Matrix result = linalg::transpose(matrix);
+
+    ASSERT_EQ(result.rows(), 3);
+    ASSERT_EQ(result.cols(), 2);
+    EXPECT_DOUBLE_EQ(result(0, 0), 1.0);
+    EXPECT_DOUBLE_EQ(result(0, 1), 4.0);
+    EXPECT_DOUBLE_EQ(result(1, 0), 2.0);
+    EXPECT_DOUBLE_EQ(result(1, 1), 5.0);
+    EXPECT_DOUBLE_EQ(result(2, 0), 3.0);
+    EXPECT_DOUBLE_EQ(result(2, 1), 6.0);
+    EXPECT_DOUBLE_EQ(matrix(0, 1), 2.0);
+}
+
+TEST(MatrixTransposeTest, ApplyingTransposeTwiceRestoresOriginalMatrix) {
+    const linalg::Matrix matrix{{1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}};
+
+    const linalg::Matrix result = linalg::transpose(linalg::transpose(matrix));
+
+    ASSERT_EQ(result.rows(), matrix.rows());
+    ASSERT_EQ(result.cols(), matrix.cols());
+    for (linalg::Matrix::size_type index = 0; index < matrix.size(); ++index) {
+        EXPECT_DOUBLE_EQ(result.data()[index], matrix.data()[index]);
+    }
+}
+
+TEST(MatrixTransposeTest, SwapsZeroDimensions) {
+    const linalg::Matrix zero_rows(0, 4);
+    const linalg::Matrix zero_columns(4, 0);
+
+    const linalg::Matrix transposed_zero_rows = linalg::transpose(zero_rows);
+    const linalg::Matrix transposed_zero_columns = linalg::transpose(zero_columns);
+
+    EXPECT_EQ(transposed_zero_rows.rows(), 4);
+    EXPECT_EQ(transposed_zero_rows.cols(), 0);
+    EXPECT_TRUE(transposed_zero_rows.empty());
+    EXPECT_EQ(transposed_zero_columns.rows(), 0);
+    EXPECT_EQ(transposed_zero_columns.cols(), 4);
+    EXPECT_TRUE(transposed_zero_columns.empty());
+}
