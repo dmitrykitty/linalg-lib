@@ -2,6 +2,8 @@
 
 #include <gtest/gtest.h>
 
+#include <cmath>
+#include <limits>
 #include <stdexcept>
 #include <utility>
 
@@ -190,4 +192,112 @@ TEST(MatrixTransposeTest, SwapsZeroDimensions) {
     EXPECT_EQ(transposed_zero_columns.rows(), 0);
     EXPECT_EQ(transposed_zero_columns.cols(), 4);
     EXPECT_TRUE(transposed_zero_columns.empty());
+}
+
+TEST(MatrixTraceTest, SumsOnlyDiagonalElementsWithoutChangingInput) {
+    const linalg::Matrix matrix{
+        {1.5, 100.0, 200.0},
+        {300.0, -2.0, 400.0},
+        {500.0, 600.0, 3.25},
+    };
+
+    EXPECT_DOUBLE_EQ(linalg::trace(matrix), 2.75);
+    EXPECT_DOUBLE_EQ(matrix(0, 1), 100.0);
+}
+
+TEST(MatrixTraceTest, SupportsOneByOneMatrix) {
+    const linalg::Matrix matrix{{-7.5}};
+
+    EXPECT_DOUBLE_EQ(linalg::trace(matrix), -7.5);
+}
+
+TEST(MatrixTraceTest, RejectsEmptyAndNonSquareMatrices) {
+    const linalg::Matrix empty;
+    const linalg::Matrix rectangular(2, 3);
+    const linalg::Matrix zero_rows(0, 3);
+    const linalg::Matrix zero_columns(3, 0);
+
+    EXPECT_THROW(linalg::trace(empty), std::invalid_argument);
+    EXPECT_THROW(linalg::trace(rectangular), std::invalid_argument);
+    EXPECT_THROW(linalg::trace(zero_rows), std::invalid_argument);
+    EXPECT_THROW(linalg::trace(zero_columns), std::invalid_argument);
+}
+
+TEST(MatrixTraceTest, PropagatesDiagonalNanAndIgnoresOffDiagonalNan) {
+    const double nan = std::numeric_limits<double>::quiet_NaN();
+    const linalg::Matrix diagonal_nan{{nan, 1.0}, {2.0, 3.0}};
+    const linalg::Matrix off_diagonal_nan{{1.0, nan}, {nan, 3.0}};
+
+    EXPECT_TRUE(std::isnan(linalg::trace(diagonal_nan)));
+    EXPECT_DOUBLE_EQ(linalg::trace(off_diagonal_nan), 4.0);
+}
+
+TEST(VectorNormTest, ComputesEachNamedAndSelectedNorm) {
+    const linalg::Vector vector{-3.0, 4.0};
+
+    EXPECT_DOUBLE_EQ(linalg::norm(vector, linalg::VectorNorm::l1), 7.0);
+    EXPECT_DOUBLE_EQ(linalg::norm(vector, linalg::VectorNorm::l2), 5.0);
+    EXPECT_DOUBLE_EQ(linalg::norm(vector, linalg::VectorNorm::infinity), 4.0);
+}
+
+TEST(MatrixNormTest, ComputesEachNamedAndSelectedNorm) {
+    const linalg::Matrix matrix{{1.0, -2.0, 3.0}, {-4.0, 5.0, -6.0}};
+
+    EXPECT_DOUBLE_EQ(linalg::norm(matrix, linalg::MatrixNorm::one), 9.0);
+    EXPECT_NEAR(
+        linalg::norm(matrix, linalg::MatrixNorm::frobenius),
+        std::sqrt(91.0),
+        1e-14);
+    EXPECT_DOUBLE_EQ(linalg::norm(matrix, linalg::MatrixNorm::infinity), 15.0);
+}
+
+TEST(NormTest, EmptyInputsHaveZeroNorm) {
+    const linalg::Vector vector;
+    const linalg::Matrix matrix;
+
+    EXPECT_DOUBLE_EQ(linalg::norm(vector, linalg::VectorNorm::l1), 0.0);
+    EXPECT_DOUBLE_EQ(linalg::norm(vector, linalg::VectorNorm::l2), 0.0);
+    EXPECT_DOUBLE_EQ(linalg::norm(vector, linalg::VectorNorm::infinity), 0.0);
+    EXPECT_DOUBLE_EQ(linalg::norm(matrix, linalg::MatrixNorm::one), 0.0);
+    EXPECT_DOUBLE_EQ(linalg::norm(matrix, linalg::MatrixNorm::frobenius), 0.0);
+    EXPECT_DOUBLE_EQ(linalg::norm(matrix, linalg::MatrixNorm::infinity), 0.0);
+}
+
+TEST(NormTest, ScaledEuclideanCalculationAvoidsIntermediateOverflow) {
+    const double large = std::numeric_limits<double>::max() / 2.0;
+    const linalg::Vector vector{large, large};
+    const linalg::Matrix matrix{{large, large}};
+
+    EXPECT_TRUE(std::isfinite(linalg::norm(vector, linalg::VectorNorm::l2)));
+    EXPECT_TRUE(std::isfinite(linalg::norm(matrix, linalg::MatrixNorm::frobenius)));
+    EXPECT_NEAR(linalg::norm(vector, linalg::VectorNorm::l2) / large, std::sqrt(2.0), 1e-15);
+    EXPECT_NEAR(linalg::norm(matrix, linalg::MatrixNorm::frobenius) / large, std::sqrt(2.0), 1e-15);
+}
+
+TEST(NormTest, RejectsUnknownEnumValues) {
+    const linalg::Vector vector{1.0};
+    const linalg::Matrix matrix{{1.0}};
+
+    EXPECT_THROW(
+        linalg::norm(vector, static_cast<linalg::VectorNorm>(999)),
+        std::invalid_argument);
+    EXPECT_THROW(
+        linalg::norm(matrix, static_cast<linalg::MatrixNorm>(999)),
+        std::invalid_argument);
+}
+
+TEST(NormTest, PropagatesNanAndInfinity) {
+    const double nan = std::numeric_limits<double>::quiet_NaN();
+    const double infinity = std::numeric_limits<double>::infinity();
+    const linalg::Vector nan_vector{1.0, nan};
+    const linalg::Vector infinite_vector{1.0, infinity, infinity};
+    const linalg::Matrix nan_matrix{{1.0, nan}};
+    const linalg::Matrix infinite_matrix{{infinity, infinity}};
+
+    EXPECT_TRUE(std::isnan(linalg::norm(nan_vector, linalg::VectorNorm::l2)));
+    EXPECT_TRUE(std::isnan(linalg::norm(nan_vector, linalg::VectorNorm::infinity)));
+    EXPECT_TRUE(std::isinf(linalg::norm(infinite_vector, linalg::VectorNorm::l2)));
+    EXPECT_TRUE(std::isnan(linalg::norm(nan_matrix, linalg::MatrixNorm::one)));
+    EXPECT_TRUE(std::isnan(linalg::norm(nan_matrix, linalg::MatrixNorm::infinity)));
+    EXPECT_TRUE(std::isinf(linalg::norm(infinite_matrix, linalg::MatrixNorm::frobenius)));
 }
