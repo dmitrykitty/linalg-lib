@@ -12,6 +12,56 @@ using size_type = linalg::Matrix::size_type;
 using Matrix = linalg::Matrix;
 using Vector = linalg::Vector;
 
+/**
+ * It is possible to have a matrix or vector consisting of numbers close to DOUBLE_MAX
+ * (let's call it just DM).
+ *
+ * So sqrt(DM^2 + DM^2 + ... + DM^2) is a problem because DM^2 itself can
+ * overflow the double limit, even if the final norm could still be representable.
+ *
+ * What we do instead:
+ *     - let's find the maximum absolute value among all numbers; assume it is MAX,
+ *       which will be our scale
+ *     - let's take MAX out of the square root:
+ *           MAX * sqrt(SCALED_1^2 + SCALED_2^2 + ... + SCALED_N^2)
+ *       where each SCALED_i = abs(Aij) / MAX and therefore belongs to [0, 1]
+ *     - so our final formula is:
+ *           scale * sqrt(sum((Aij / scale)^2))
+ *       or equivalently:
+ *           sqrt(scale^2 * sum((Aij / scale)^2))
+ *
+ * So we could make two passes: the first one to find MAX and the second one
+ * to calculate the scaled sum. But we want to finish it in just one pass.
+ *
+ * During the pass, `scale` is the largest absolute value seen so far, and
+ * `sum_of_squares` stores the sum relative to this scale.
+ *
+ * We maintain the following invariant:
+ *           real_sum_of_squares = scale^2 * sum_of_squares
+ * 
+ * If the next magnitude is smaller than or equal to the current scale, nothing
+ * changes about the scale. We just add its scaled contribution:
+ *           sum_of_squares += (magnitude / scale)^2
+ *
+ * If the next magnitude is larger than the current scale, we have found a new
+ * scale. All previously accumulated values were expressed relative to the old
+ * scale, so we have to rescale them:
+ *
+ *           ratio = old_scale / new_scale
+ *
+ *           sum_of_squares =
+ *               1 + old_sum_of_squares * ratio^2 or (new_scale^2 + old_sum_of_squares * old_scale^2) / new scale^2
+ *
+ * So 1 represents the new maximum itself because:
+ *           new_scale / new_scale = 1
+ *
+ * After processing all values, we restore the real norm:
+ *           scale * sqrt(sum_of_squares)
+ *
+ * The important part is that we always divide the smaller value by the larger
+ * one before squaring, so the ratio stays in [0, 1] and we avoid overflowing
+ * because of squaring very large input values.
+ */
 double scaled_euclidean_norm(const double* values, std::size_t size) {
     double scale = 0.0;
     double sum_of_squares = 1.0;
