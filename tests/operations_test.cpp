@@ -301,3 +301,93 @@ TEST(NormTest, PropagatesNanAndInfinity) {
     EXPECT_TRUE(std::isnan(linalg::norm(nan_matrix, linalg::MatrixNorm::infinity)));
     EXPECT_TRUE(std::isinf(linalg::norm(infinite_matrix, linalg::MatrixNorm::frobenius)));
 }
+
+TEST(VectorNormalizeTest, ProducesUnitVectorWithoutChangingInput) {
+    const linalg::Vector vector{3.0, 4.0};
+
+    const linalg::Vector result = linalg::normalize(vector);
+
+    ASSERT_EQ(result.size(), 2);
+    EXPECT_NEAR(result[0], 0.6, 1e-15);
+    EXPECT_NEAR(result[1], 0.8, 1e-15);
+    EXPECT_NEAR(linalg::norm(result, linalg::VectorNorm::l2), 1.0, 1e-15);
+    EXPECT_DOUBLE_EQ(vector[0], 3.0);
+    EXPECT_DOUBLE_EQ(vector[1], 4.0);
+}
+
+TEST(VectorNormalizeTest, HandlesExtremeFiniteMagnitudes) {
+    const double large = std::numeric_limits<double>::max();
+    const double tiny = std::numeric_limits<double>::denorm_min();
+
+    const linalg::Vector large_result = linalg::normalize({large, large});
+    const linalg::Vector tiny_result = linalg::normalize({tiny, tiny});
+
+    const double expected = 1.0 / std::sqrt(2.0);
+    EXPECT_NEAR(large_result[0], expected, 1e-15);
+    EXPECT_NEAR(large_result[1], expected, 1e-15);
+    EXPECT_NEAR(tiny_result[0], expected, 1e-15);
+    EXPECT_NEAR(tiny_result[1], expected, 1e-15);
+}
+
+TEST(VectorNormalizeTest, RejectsEmptyZeroAndNonFiniteVectors) {
+    const double nan = std::numeric_limits<double>::quiet_NaN();
+    const double infinity = std::numeric_limits<double>::infinity();
+
+    EXPECT_THROW(linalg::normalize(linalg::Vector{}), std::invalid_argument);
+    EXPECT_THROW(linalg::normalize(linalg::Vector{0.0, -0.0}), std::invalid_argument);
+    EXPECT_THROW(linalg::normalize(linalg::Vector{1.0, nan}), std::invalid_argument);
+    EXPECT_THROW(linalg::normalize(linalg::Vector{1.0, infinity}), std::invalid_argument);
+}
+
+TEST(MatrixVectorMultiplyTest, MultipliesRectangularMatrixWithoutChangingInputs) {
+    const linalg::Matrix matrix{{1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}};
+    const linalg::Vector vector{7.0, 8.0, 9.0};
+
+    const linalg::Vector result = linalg::multiply(matrix, vector);
+
+    ASSERT_EQ(result.size(), 2);
+    EXPECT_DOUBLE_EQ(result[0], 50.0);
+    EXPECT_DOUBLE_EQ(result[1], 122.0);
+    EXPECT_DOUBLE_EQ(matrix(0, 0), 1.0);
+    EXPECT_DOUBLE_EQ(vector[0], 7.0);
+}
+
+TEST(MatrixVectorMultiplyTest, SupportsIdentityAndZeroValues) {
+    const linalg::Matrix identity{{1.0, 0.0, 0.0},
+                                  {0.0, 1.0, 0.0},
+                                  {0.0, 0.0, 1.0}};
+    const linalg::Vector vector{-2.0, 3.5, 7.0};
+    const linalg::Matrix zero_matrix(2, 3);
+
+    const linalg::Vector identity_result = linalg::multiply(identity, vector);
+    const linalg::Vector zero_result = linalg::multiply(zero_matrix, vector);
+
+    ASSERT_EQ(identity_result.size(), 3);
+    EXPECT_DOUBLE_EQ(identity_result[0], -2.0);
+    EXPECT_DOUBLE_EQ(identity_result[1], 3.5);
+    EXPECT_DOUBLE_EQ(identity_result[2], 7.0);
+    ASSERT_EQ(zero_result.size(), 2);
+    EXPECT_DOUBLE_EQ(zero_result[0], 0.0);
+    EXPECT_DOUBLE_EQ(zero_result[1], 0.0);
+}
+
+TEST(MatrixVectorMultiplyTest, SupportsCompatibleZeroDimensions) {
+    const linalg::Vector values{1.0, 2.0, 3.0};
+
+    const linalg::Vector no_rows = linalg::multiply(linalg::Matrix(0, 3), values);
+    const linalg::Vector no_columns =
+        linalg::multiply(linalg::Matrix(3, 0), linalg::Vector{});
+
+    EXPECT_TRUE(no_rows.empty());
+    ASSERT_EQ(no_columns.size(), 3);
+    EXPECT_DOUBLE_EQ(no_columns[0], 0.0);
+    EXPECT_DOUBLE_EQ(no_columns[1], 0.0);
+    EXPECT_DOUBLE_EQ(no_columns[2], 0.0);
+}
+
+TEST(MatrixVectorMultiplyTest, RejectsIncompatibleDimensions) {
+    const linalg::Matrix matrix(2, 3);
+    const linalg::Vector vector(2);
+
+    EXPECT_THROW(linalg::multiply(matrix, vector), std::invalid_argument);
+}

@@ -6,14 +6,20 @@
 namespace linalg {
 
 enum class VectorNorm {
+    /// Sum of absolute values: |x0| + |x1| + ...
     l1,
+    /// Euclidean length: sqrt(x0^2 + x1^2 + ...)
     l2,
+    /// Largest absolute element: max(|xi|)
     infinity,
 };
 
 enum class MatrixNorm {
+    /// Largest absolute column sum.
     one,
+    /// Square root of the sum of squares of every matrix element.
     frobenius,
+    /// Largest absolute row sum.
     infinity,
 };
 
@@ -28,5 +34,11 @@ double trace(const Matrix&);
 
 double norm(const Vector& vector, VectorNorm type);
 double norm(const Matrix& matrix, MatrixNorm type);
+
+/// Returns a new vector whose L2 norm is 1. Scaled arithmetic is used instead of
+/// dividing by norm() so extreme finite values avoid overflow or underflow.
+Vector normalize(const Vector& vector);
+
+Vector multiply(const Matrix& matrix, const Vector& vector);
 
 } // namespace linalg

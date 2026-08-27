@@ -254,4 +254,48 @@ double norm(const Matrix& matrix, MatrixNorm type) {
     throw std::invalid_argument("unknown matrix norm type");
 }
 
+Vector normalize(const Vector& vector) {
+    double scale = 0.0;
+    for (size_type index = 0; index < vector.size(); ++index) {
+        const double magnitude = std::abs(vector[index]);
+        if (!std::isfinite(magnitude)) {
+            throw std::invalid_argument(
+                "cannot normalize a vector with non-finite elements");
+        }
+        scale = std::max(scale, magnitude);
+    }
+
+    if (scale == 0.0) {
+        throw std::invalid_argument("cannot normalize a zero vector");
+    }
+
+    long double scaled_sum_of_squares = 0.0L;
+    for (size_type index = 0; index < vector.size(); ++index) {
+        const long double scaled_value = static_cast<long double>(vector[index]) / scale;
+        scaled_sum_of_squares += scaled_value * scaled_value;
+    }
+
+    const long double scaled_length = std::sqrt(scaled_sum_of_squares);
+    Vector result(vector.size());
+    for (size_type index = 0; index < vector.size(); ++index) {
+        result[index] = static_cast<double>((static_cast<long double>(vector[index]) / scale) / scaled_length);
+    }
+    return result;
+}
+
+Vector multiply(const Matrix& matrix, const Vector& vector) {
+    if (matrix.cols() != vector.size()) {
+        throw std::invalid_argument("vector size must equal matrix column count");
+    }
+
+    Vector result(matrix.rows(), 0.0);
+    for (size_type row = 0; row < matrix.rows(); ++row) {
+        for (size_type col = 0; col < matrix.cols(); ++col) {
+            result[row] += matrix(row, col) * vector[col];
+        }
+    }
+
+    return result;
+}
+
 } // namespace linalg
