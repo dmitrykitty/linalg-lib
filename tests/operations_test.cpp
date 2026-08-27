@@ -1,5 +1,7 @@
 #include <linalg/operations.hpp>
 
+#include "support/approximate.hpp"
+
 #include <gtest/gtest.h>
 
 #include <cmath>
@@ -390,4 +392,106 @@ TEST(MatrixVectorMultiplyTest, RejectsIncompatibleDimensions) {
     const linalg::Vector vector(2);
 
     EXPECT_THROW(linalg::multiply(matrix, vector), std::invalid_argument);
+}
+
+TEST(MatrixMatrixMultiplyTest, RejectsIncompatibleDimensions) {
+    const linalg::Matrix left(3, 2);
+    const linalg::Matrix right(3, 2);
+    const linalg::Matrix zero(0, 0);
+    const linalg::Matrix square(3, 3);
+
+    EXPECT_THROW(linalg::multiply(left, right), std::invalid_argument);
+    EXPECT_THROW(linalg::multiply(left, zero), std::invalid_argument);
+    EXPECT_THROW(linalg::multiply(left, square), std::invalid_argument);
+}
+
+TEST(MatrixMatrixMultiplyTest, MultiplySquareMatrices) {
+    const linalg::Matrix left{{1.0, 2.0, 3.0},
+                              {3.0, 4.0, 5.0},
+                              {5.0, 6.0, 7.0}};
+    const linalg::Matrix right{{7.0, 6.0, 5.0},
+                               {5.0, 4.0, 3.0},
+                               {3.0, 2.0, 1.0}};
+
+    const linalg::Matrix result = linalg::multiply(left, right);
+
+    ASSERT_EQ(result.rows(), 3);
+    ASSERT_EQ(result.cols(), 3);
+    EXPECT_DOUBLE_EQ(result(0, 0), 26.0);
+    EXPECT_DOUBLE_EQ(result(0, 1), 20.0);
+    EXPECT_DOUBLE_EQ(result(0, 2), 14.0);
+    EXPECT_DOUBLE_EQ(result(1, 0), 56.0);
+    EXPECT_DOUBLE_EQ(result(1, 1), 44.0);
+    EXPECT_DOUBLE_EQ(result(1, 2), 32.0);
+    EXPECT_DOUBLE_EQ(result(2, 0), 86.0);
+    EXPECT_DOUBLE_EQ(result(2, 1), 68.0);
+    EXPECT_DOUBLE_EQ(result(2, 2), 50.0);
+}
+
+TEST(MatrixMatrixMultiplyTest, MultipliesRectangularMatricesAndPreservesInputs) {
+    const linalg::Matrix left{{1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}};
+    const linalg::Matrix right{{7.0, 8.0}, {9.0, 10.0}, {11.0, 12.0}};
+    const linalg::Matrix left_before = left;
+    const linalg::Matrix right_before = right;
+
+    const linalg::Matrix result = linalg::multiply(left, right);
+    const linalg::Matrix expected{{58.0, 64.0}, {139.0, 154.0}};
+
+    EXPECT_TRUE(linalg::test::almost_equal(result, expected, 1e-12, 1e-12));
+    EXPECT_TRUE(linalg::test::almost_equal(left, left_before, 0.0, 0.0));
+    EXPECT_TRUE(linalg::test::almost_equal(right, right_before, 0.0, 0.0));
+
+    const linalg::Matrix tall{{2.0}, {-1.0}};
+    const linalg::Matrix wide{{3.0, 4.0, 5.0}};
+    const linalg::Matrix wide_result = linalg::multiply(tall, wide);
+    const linalg::Matrix wide_expected{{6.0, 8.0, 10.0}, {-3.0, -4.0, -5.0}};
+
+    EXPECT_TRUE(
+        linalg::test::almost_equal(wide_result, wide_expected, 1e-12, 1e-12));
+}
+
+TEST(MatrixMatrixMultiplyTest, SupportsIdentityAndZeroMatrices) {
+    const linalg::Matrix matrix{{1.5, -2.0, 3.25}, {4.0, 5.5, -6.0}};
+    const linalg::Matrix left_identity{{1.0, 0.0}, {0.0, 1.0}};
+    const linalg::Matrix right_identity{{1.0, 0.0, 0.0},
+                                        {0.0, 1.0, 0.0},
+                                        {0.0, 0.0, 1.0}};
+    const linalg::Matrix zero(2, 3);
+    const linalg::Matrix right(3, 4, 2.0);
+
+    EXPECT_TRUE(linalg::test::almost_equal(
+        linalg::multiply(left_identity, matrix), matrix, 1e-12, 1e-12));
+    EXPECT_TRUE(linalg::test::almost_equal(
+        linalg::multiply(matrix, right_identity), matrix, 1e-12, 1e-12));
+
+    const linalg::Matrix zero_result = linalg::multiply(zero, right);
+    ASSERT_EQ(zero_result.rows(), 2);
+    ASSERT_EQ(zero_result.cols(), 4);
+    for (linalg::Matrix::size_type index = 0; index < zero_result.size(); ++index) {
+        EXPECT_DOUBLE_EQ(zero_result.data()[index], 0.0);
+    }
+}
+
+TEST(MatrixMatrixMultiplyTest, SupportsCompatibleZeroDimensions) {
+    const linalg::Matrix zero_inner =
+        linalg::multiply(linalg::Matrix(2, 0), linalg::Matrix(0, 3));
+    const linalg::Matrix zero_rows =
+        linalg::multiply(linalg::Matrix(0, 3), linalg::Matrix(3, 4));
+    const linalg::Matrix zero_columns =
+        linalg::multiply(linalg::Matrix(3, 0), linalg::Matrix(0, 0));
+
+    EXPECT_EQ(zero_inner.rows(), 2);
+    EXPECT_EQ(zero_inner.cols(), 3);
+    EXPECT_EQ(zero_inner.size(), 6);
+    for (linalg::Matrix::size_type index = 0; index < zero_inner.size(); ++index) {
+        EXPECT_DOUBLE_EQ(zero_inner.data()[index], 0.0);
+    }
+
+    EXPECT_EQ(zero_rows.rows(), 0);
+    EXPECT_EQ(zero_rows.cols(), 4);
+    EXPECT_TRUE(zero_rows.empty());
+
+    EXPECT_EQ(zero_columns.rows(), 3);
+    EXPECT_EQ(zero_columns.cols(), 0);
+    EXPECT_TRUE(zero_columns.empty());
 }

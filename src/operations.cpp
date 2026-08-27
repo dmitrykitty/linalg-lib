@@ -298,4 +298,22 @@ Vector multiply(const Matrix& matrix, const Vector& vector) {
     return result;
 }
 
+Matrix multiply(const Matrix& left, const Matrix& right) {
+    if (left.cols() != right.rows()) {
+        throw std::invalid_argument("left column count must equal right row count");
+    }
+
+    Matrix result(left.rows(), right.cols(), 0.0);
+
+    for (size_type row = 0; row < left.rows(); ++row) {
+        for (size_type col = 0; col < right.cols(); ++col) {
+            for (size_type inner = 0; inner < left.cols(); ++inner) {
+                result(row, col) += left(row, inner) * right(inner, col);
+            }
+        }
+    }
+
+    return result;
+}
+
 } // namespace linalg

@@ -40,5 +40,6 @@ double norm(const Matrix& matrix, MatrixNorm type);
 Vector normalize(const Vector& vector);
 
 Vector multiply(const Matrix& matrix, const Vector& vector);
+Matrix multiply(const Matrix& left, const Matrix& right);
 
 } // namespace linalg
