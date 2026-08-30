@@ -1,8 +1,5 @@
 # Performance experiments
 
-This document will contain measured results only. The Phase 0 benchmark is a framework smoke test,
-not a performance claim about the library.
-
 ## Measurement protocol
 
 For each future experiment, record:
@@ -19,12 +16,6 @@ For each future experiment, record:
 Use Release builds for performance measurements. Sanitizer builds are correctness tools and must
 not be used for performance comparisons. Prefer native Linux for hardware-counter measurements;
 when running under WSL, document counter availability and virtualization limitations.
-
-## Results so far -- 2026-08-23
-
-These are development measurements, not universal performance claims. They describe the current
-machine and toolchain and are intended to guide implementation decisions. Charts can be generated
-from saved JSON results later.
 
 ### Environment
 
@@ -163,16 +154,121 @@ observed variation. There is not enough evidence to rewrite the public function.
 implementation remains the default while more sizes and a quieter measurement environment are
 tested.
 
+## Experiment 4 -- scalar matmul loop ordering
+
+### Question
+
+How much does loop ordering affect a scalar row-major matrix multiplication, and does one ordering
+remain best for square and rectangular matrices?
+
+### Method
+
+For arguments `M/N/K`, the benchmark multiplies `A(M x K)` by `B(K x N)` into `C(M x N)`. All six
+permutations of the `i`, `j`, and `k` loops execute the same update:
+
+```text
+C(i, j) += A(i, k) * B(k, j)
+```
+
+Each candidate is validated before timing and uses a preallocated result. Clearing `C` is inside
+every timed kernel, so allocation is excluded while equal result-initialization work is included.
+Inputs are constructed before timing. The full run used a Release build, 0.5 seconds minimum time,
+0.2 seconds warmup, 15 repetitions, random interleaving, and aggregate-only reporting:
+
+```bash
+./build/release/benchmarks/linalg_benchmarks \
+    --benchmark_filter='^BM_MatMul.*Kernel' \
+    --benchmark_min_time=0.5s \
+    --benchmark_min_warmup_time=0.2 \
+    --benchmark_repetitions=15 \
+    --benchmark_enable_random_interleaving=true \
+    --benchmark_report_aggregates_only=true
+```
+
+The measurements were taken on the environment documented above. The
+[selected aggregate data](data/matmul-loop-orders-2026-08-30.json) contains the medians and CVs
+extracted from the supplied console output. Future runs should save Google Benchmark JSON directly
+with `--benchmark_out` rather than relying on console extraction. Rebuild both figures with:
+
+```bash
+source .venv/bin/activate
+python3 -m tools.plot_visualizer.generate_matmul_figures
+```
+
+### Square scaling
+
+![Square matmul loop-order CPU time and throughput](images/matmul-square-loop-orders.png)
+
+| N | Fastest observed | Median CPU time | Throughput | Slowest observed | Median CPU time | Time ratio |
+|---:|---|---:|---:|---|---:|---:|
+| 64 | `kij` | 79.0 us | 6.64 GFLOP/s | `jik` | 226.7 us | 2.87x |
+| 128 | `ikj` | 626.3 us | 6.70 GFLOP/s | `kji` | 5.758 ms | 9.19x |
+| 256 | `ikj` | 5.731 ms | 5.86 GFLOP/s | `kji` | 73.663 ms | 12.85x |
+| 512 | `ikj` | 50.433 ms | 5.32 GFLOP/s | `jki` | 622.664 ms | 12.35x |
+
+The table reports observed winners, not proof that one of the two inner-`j` variants is universally
+superior. At `N=64`, for example, `kij` was only about 1.1% ahead of `ikj`, while their CPU-time CVs
+were 9.52% and 3.40%. The meaningful result is the separation between locality groups:
+
+| Innermost loop | Orders | Row-major access behavior | Observed group |
+|---|---|---|---|
+| `j` | `ikj`, `kij` | contiguous `B(k,j)` reads and `C(i,j)` updates | fastest |
+| `k` | `ijk`, `jik` | contiguous `A(i,k)`, but `B(k,j)` is strided by `N` | middle |
+| `i` | `jki`, `kji` | both `A(i,k)` and `C(i,j)` advance with large strides | slowest at larger sizes |
+
+At `N=64`, the three matrices occupy about 96 KiB together and fit within the 256 KiB L2 cache.
+At `N=128`, their combined storage is about 384 KiB and no longer fits. The sharp drop of the
+inner-`i` variants from roughly 2.3-2.4 GFLOP/s to about 0.73-0.74 GFLOP/s is consistent with cache
+locality becoming important, but hardware counters are still needed to establish the precise cause.
+
+### Rectangular shape sensitivity
+
+The next three shapes are permutations of the same dimensions. Consequently, each performs exactly
+`2 x M x N x K = 134,217,728` reported FLOPs; only the matrix shapes and traversal behavior change.
+
+![Rectangular matmul loop-order throughput](images/matmul-rectangular-loop-orders.png)
+
+| M/N/K | `ikj` | `kij` | Faster observed variant | Throughput ratio |
+|---|---:|---:|---|---:|
+| 1024/1024/64 | 5.42 GFLOP/s | 2.39 GFLOP/s | `ikj` | 2.27x |
+| 1024/64/1024 | 6.07 GFLOP/s | 3.12 GFLOP/s | `ikj` | 1.95x |
+| 64/1024/1024 | 3.47 GFLOP/s | 5.67 GFLOP/s | `kij` | 1.63x |
+
+Both variants have contiguous inner `j` loops, yet exchanging the outer `i` and `k` loops reverses
+the winner when `M` becomes small. One plausible explanation is reuse: `ikj` keeps one output row
+active while sweeping `k`, whereas `kij` keeps one row of `B` active while visiting every output
+row. With `M=64`, reusing a `B` row across the small number of output rows appears more favorable;
+with `M=1024`, repeatedly walking the much larger set of output rows appears more costly. This is an
+inference from timing, not a cache-miss measurement, and should be tested with `perf` counters.
+
+### Repeatability and next measurements
+
+A separate focused `256x256x256` run reproduced the same three performance groups and the same
+`ikj`/`kij` ordering. Individual medians differed by up to about 5%, and the nearly tied `jki` and
+`kji` variants exchanged order. This supports the broad locality conclusion while warning against
+over-interpreting small differences between close kernels.
+
+Next, profile representative `ikj`, `kij`, and `jki` cases at `512x512x512` and across the three
+rectangular shapes. Useful evidence includes cycles, instructions, IPC, L1/L2/LLC misses, and
+possibly TLB events. Cache blocking should be introduced only after those baseline profiles are
+recorded.
+
 ## Current conclusions
 
 1. Memory traversal can matter far more than syntax. Destination-contiguous transpose traversal
-   produced the only large, consistent improvement observed so far.
+   produced a large, consistent improvement over source-contiguous traversal.
 2. Raw pointers are not automatically faster. When accessors are visible to the optimizer, indexed
    and pointer expressions can compile into equivalent loops.
 3. A result smaller than the benchmark's variability is not a performance win. Reversing winners
    across sizes is evidence to investigate further, not a reason to select one implementation.
 4. Kernel-only and end-to-end benchmarks answer different questions. Allocation and copying must be
    included when evaluating the public operation but excluded when isolating a traversal kernel.
+5. In scalar row-major matmul, keeping `j` innermost creates the strongest loop-order group because
+   both `B` reads and `C` updates are contiguous. At `512x512x512`, loop order alone changed median
+   CPU time by more than 12x.
+6. A good inner loop is necessary but not sufficient. Rectangular matrices reversed the observed
+   winner between `ikj` and `kij`, showing that outer-loop reuse and problem shape must guide later
+   blocking decisions.
 
 ## Reproducing focused measurements
 
@@ -215,6 +311,24 @@ Run the focused trace experiment and save machine-readable results:
 
 The JSON output is intended for later tables and charts. `/tmp` is temporary; copy important raw
 results into a persistent local results directory before restarting WSL.
+
+### Creating plots for the documentation
+
+The optional [benchmark plot visualizer](../tools/plot_visualizer/README.md) generates SVG or PNG
+figures from saved Google Benchmark JSON. For example:
+
+```bash
+source .venv/bin/activate
+python3 -m tools.plot_visualizer benchmark-results/matmul.json \
+    --shape=512/512/512 \
+    --metric='FLOP/s' \
+    --output=docs/images/matmul-512.svg
+```
+
+Raw files in `benchmark-results/` stay ignored because they are machine-local evidence. Selected
+plots under `docs/images/` may be committed when the surrounding text records the environment,
+command, statistic, limitations, and interpretation. The tool-local guide contains the complete
+installation, CLI, Python API, and Markdown instructions.
 
 ## Experiment template
 

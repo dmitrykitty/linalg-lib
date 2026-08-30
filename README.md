@@ -22,6 +22,7 @@ are intentionally being added incrementally.
 - in-place matrix addition and subtraction;
 - in-place scalar addition, subtraction, and multiplication;
 - value-returning addition, subtraction, and scalar multiplication;
+- matrix-vector and reference matrix-matrix multiplication;
 - adding a vector to every row or every column;
 - constructing a matrix by repeating a vector as rows or columns;
 - transpose and trace;
@@ -37,6 +38,7 @@ are intentionally being added incrementally.
 - in-place vector addition and subtraction;
 - in-place scalar addition, subtraction, and multiplication;
 - value-returning addition, subtraction, and scalar multiplication;
+- L2 normalization with validation for zero and non-finite vectors;
 - L1, L2, and infinity norms selected with `VectorNorm`.
 
 ## Basic usage
@@ -137,10 +139,41 @@ Run a quick comparison of one operation and size:
     --benchmark_report_aggregates_only=true
 ```
 
+Run all six matmul loop orders for one shape. Arguments are M/N/K, representing
+an M-by-K matrix multiplied by a K-by-N matrix:
+
+```bash
+./build/release/benchmarks/linalg_benchmarks \
+    --benchmark_filter='^BM_MatMul.*Kernel/256/256/256$' \
+    --benchmark_min_time=0.1s \
+    --benchmark_repetitions=7 \
+    --benchmark_enable_random_interleaving=true \
+    --benchmark_report_aggregates_only=true
+```
+
+### Plotting benchmark results
+
+The optional Matplotlib tool under `tools/plot_visualizer/` turns Google Benchmark JSON into SVG or
+PNG figures without adding a dependency to the C++ library. A focused matmul plot can be generated
+with:
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+python3 -m pip install -r tools/plot_visualizer/requirements.txt
+python3 -m tools.plot_visualizer benchmark-results/matmul.json \
+    --shape=512/512/512 \
+    --metric='FLOP/s' \
+    --output=docs/images/matmul-512.svg
+```
+
+See the [plot visualizer guide](tools/plot_visualizer/README.md) for JSON capture, installation, CLI
+options, reusable Python API, plot selection, Markdown embedding, and troubleshooting.
+
 Benchmarks are separated by operation family in `benchmarks/`, while one executable and Google
 Benchmark's regular-expression filter provide a common runner. Current experiments include
-broadcasting, transpose, and trace. Kernel-only timings isolate element-processing loops;
-end-to-end transpose timings also include result allocation.
+broadcasting, transpose, trace, and all six scalar matmul loop orders. Kernel-only timings use a
+preallocated result, while end-to-end timings also include result allocation.
 
 The main findings so far are:
 
@@ -150,7 +183,24 @@ The main findings so far are:
 - manually replacing indexed access with pointers did not produce a consistent improvement for
   `add_to_each_row`;
 - direct-data and `operator()` trace implementations are currently indistinguishable within the
-  observed measurement noise.
+  observed measurement noise;
+- row-major matmul loop order changes performance by nearly 3x at `64x64x64` and more than 12x at
+  `512x512x512`; kernels with contiguous inner-loop writes form the consistently fastest group.
+
+### Initial matmul loop-order results
+
+![Square matrix multiplication loop-order scaling](docs/images/matmul-square-loop-orders.png)
+
+The six scalar kernels perform the same arithmetic in different loop orders. For square matrices,
+the `ikj` and `kij` variants keep `j` innermost, making reads from `B` and updates to `C` contiguous.
+They remain near 5-7 GFLOP/s across the measured sizes. At `512x512x512`, observed median CPU time
+was 50.4 ms for `ikj` versus 622.7 ms for the slowest `jki` variant, a 12.35x difference.
+
+The exact ranking between `ikj` and `kij` is not yet decisive: their differences are often similar
+to the run-to-run variability. Rectangular matrices also demonstrate that the best outer-loop order
+depends on shape even when the inner loop is identical. See the
+[full experiment](docs/performance.md#experiment-4----scalar-matmul-loop-ordering) for the second
+figure, measured tables, methodology, caveats, and cache-reuse hypothesis.
 
 See [docs/performance.md](docs/performance.md) for commands, environment details, measured tables,
 limitations, and interpretation. Published performance claims should always be based on repeatable
@@ -166,5 +216,6 @@ benchmarks/       Google Benchmark experiments
 examples/         Small API usage programs
 cmake/            Project CMake modules
 docs/             Architecture and measured performance notes
+tools/            Optional developer and documentation utilities
 ```
 
