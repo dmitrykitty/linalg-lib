@@ -34,7 +34,6 @@ target_sources(
     PRIVATE
         src/matrix.cpp
         src/operations.cpp
-        src/vector.cpp
     PUBLIC
         FILE_SET public_headers
         TYPE HEADERS
@@ -43,6 +42,7 @@ target_sources(
             include/linalg/linalg.hpp
             include/linalg/matrix.hpp
             include/linalg/operations.hpp
+            include/linalg/scalar.hpp
             include/linalg/vector.hpp
 )
 
@@ -71,4 +71,3 @@ endif()
 if(LINALG_BUILD_EXAMPLES)
     add_subdirectory(examples)
 endif()
-
