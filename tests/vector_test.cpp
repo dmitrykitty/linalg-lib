@@ -225,3 +225,88 @@ TEST(VectorFunctionOperatorTest, AdditionAndSubtractionRejectDifferentSizes) {
     EXPECT_TRUE(linalg::test::almost_equal(
         vector, linalg::Vector{1.0, 2.0}, 0.0, 0.0));
 }
+
+template <typename Left, typename Right>
+concept VectorAdditionAvailable = requires(const Left& left, const Right& right) {
+    left + right;
+};
+
+TEST(DynamicVectorTest, SupportedScalarsAndDoubleAliasAreExplicit) {
+    static_assert(linalg::FloatingScalar<float>);
+    static_assert(linalg::FloatingScalar<double>);
+    static_assert(!linalg::FloatingScalar<int>);
+    static_assert(!linalg::FloatingScalar<long double>);
+    static_assert(std::is_same_v<linalg::Vector, linalg::DynamicVector<double>>);
+    static_assert(!VectorAdditionAvailable<
+                  linalg::DynamicVector<float>, linalg::DynamicVector<double>>);
+}
+
+TEST(DynamicVectorTest, FloatConstructionAndStorageRemainContiguous) {
+    std::vector<float> values{1.5f, -2.0f, 3.25f};
+    linalg::DynamicVector<float> vector(values);
+    values[0] = 99.0f;
+
+    ASSERT_EQ(vector.size(), 3U);
+    EXPECT_EQ(vector[0], 1.5f);
+    EXPECT_EQ(vector.at(2), 3.25f);
+    EXPECT_EQ(vector.data() + 2, &vector[2]);
+    EXPECT_NE(vector.data(), values.data());
+    EXPECT_THROW((void)vector.at(3), std::out_of_range);
+
+    const linalg::DynamicVector<float> zeroes(2);
+    EXPECT_EQ(zeroes[0], 0.0f);
+    EXPECT_EQ(zeroes[1], 0.0f);
+
+    constexpr auto maximum = std::numeric_limits<std::size_t>::max();
+    EXPECT_THROW((void)linalg::DynamicVector<float>(maximum), std::length_error);
+}
+
+TEST(DynamicVectorTest, FloatCopyAndMovePreserveOwnership) {
+    static_assert(std::is_nothrow_move_constructible_v<linalg::DynamicVector<float>>);
+    static_assert(std::is_nothrow_move_assignable_v<linalg::DynamicVector<float>>);
+
+    linalg::DynamicVector<float> original{1.0f, 2.0f};
+    linalg::DynamicVector<float> copy = original;
+    copy[0] = 7.0f;
+    EXPECT_EQ(original[0], 1.0f);
+    EXPECT_NE(original.data(), copy.data());
+
+    linalg::DynamicVector<float> moved = std::move(copy);
+    EXPECT_TRUE(copy.empty());
+    EXPECT_EQ(moved[0], 7.0f);
+
+    linalg::DynamicVector<float> target{0.0f};
+    target = std::move(moved);
+    EXPECT_TRUE(moved.empty());
+    EXPECT_EQ(target[1], 2.0f);
+}
+
+TEST(DynamicVectorTest, FloatArithmeticAndDimensionErrors) {
+    const linalg::DynamicVector<float> left{1.0f, 2.0f};
+    const linalg::DynamicVector<float> right{3.0f, 4.0f};
+    const auto sum = left + right;
+    const auto difference = right - left;
+    const auto scaled = 2.0f * left;
+
+    static_assert(std::is_same_v<decltype(sum), const linalg::DynamicVector<float>>);
+    EXPECT_EQ(sum[0], 4.0f);
+    EXPECT_EQ(sum[1], 6.0f);
+    EXPECT_EQ(difference[0], 2.0f);
+    EXPECT_EQ(scaled[1], 4.0f);
+    EXPECT_EQ((left * 2.0f)[0], 2.0f);
+
+    linalg::DynamicVector<float> result = left;
+    result += right;
+    result -= right;
+    result += 1.0f;
+    result -= 1.0f;
+    result *= 3.0f;
+    EXPECT_EQ(result[0], 3.0f);
+    EXPECT_EQ(result[1], 6.0f);
+
+    const linalg::DynamicVector<float> wrong_size{5.0f};
+    EXPECT_THROW(result += wrong_size, std::invalid_argument);
+    EXPECT_THROW(result -= wrong_size, std::invalid_argument);
+    EXPECT_EQ(result[0], 3.0f);
+    EXPECT_EQ(result[1], 6.0f);
+}

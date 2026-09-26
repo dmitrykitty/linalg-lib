@@ -30,7 +30,8 @@ are intentionally being added incrementally.
 
 ### Vector
 
-- contiguous owning `double` storage;
+- contiguous owning `float` or `double` storage through `DynamicVector<T>`;
+- `Vector` remains an alias for `DynamicVector<double>`;
 - default, size, fill, initializer-list, and `std::span` construction;
 - copy and move ownership semantics;
 - `size()`, `empty()`, and contiguous `data()` access;
@@ -82,6 +83,19 @@ For `Vector`, braces contain values while parentheses specify a size:
 linalg::Vector one_value{3.0}; // one element containing 3.0
 linalg::Vector three_zeroes(3); // three zero-initialized elements
 ```
+
+The first scalar-generic container is `DynamicVector<T>`, currently supporting `float` and
+`double`. Its constructors, element access, and arithmetic work for both types:
+
+```cpp
+linalg::DynamicVector<float> samples{1.0f, 2.0f, 3.0f};
+samples *= 2.0f;
+```
+
+Existing `linalg::Vector` code still uses `double`. Matrix operations, vector norms, and
+normalization currently take that double-precision alias; their scalar-generic versions are a
+later migration step. Operations between different scalar types are not provided yet; convert
+elements explicitly when needed.
 
 Vector addition and subtraction require equal sizes. Matrix addition and subtraction require equal
 shapes. Broadcast operations require a vector length matching the relevant matrix dimension.
@@ -218,4 +232,3 @@ cmake/            Project CMake modules
 docs/             Architecture and measured performance notes
 tools/            Optional developer and documentation utilities
 ```
-
