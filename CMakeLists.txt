@@ -32,7 +32,6 @@ add_library(linalg::linalg ALIAS linalg)
 target_sources(
     linalg
     PRIVATE
-        src/matrix.cpp
         src/operations.cpp
     PUBLIC
         FILE_SET public_headers
