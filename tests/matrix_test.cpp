@@ -227,3 +227,100 @@ TEST(MatrixFunctionOperatorTest, AdditionAndSubtractionRejectDifferentShapes) {
     EXPECT_TRUE(linalg::test::almost_equal(
         matrix, linalg::Matrix(2, 2, 1.0), 0.0, 0.0));
 }
+
+template <typename Left, typename Right>
+concept MatrixAdditionAvailable = requires(const Left& left, const Right& right) {
+    left + right;
+};
+
+TEST(DynamicMatrixTest, DoubleAliasAndMixedScalarPolicy) {
+    static_assert(std::is_same_v<linalg::Matrix, linalg::DynamicMatrix<double>>);
+    static_assert(std::is_same_v<
+                  decltype(std::declval<const linalg::DynamicMatrix<float>&>().data()),
+                  const float*>);
+    static_assert(!MatrixAdditionAvailable<
+                  linalg::DynamicMatrix<float>, linalg::DynamicMatrix<double>>);
+}
+
+TEST(DynamicMatrixTest, FloatConstructorsPreserveRowMajorLayoutAndPadding) {
+    linalg::DynamicMatrix<float> matrix{{1.0f, 2.0f, 3.0f}, {4.0f}};
+
+    ASSERT_EQ(matrix.rows(), 2U);
+    ASSERT_EQ(matrix.cols(), 3U);
+    EXPECT_EQ(matrix.size(), 6U);
+    EXPECT_EQ(matrix.data()[0], 1.0f);
+    EXPECT_EQ(matrix.data()[3], 4.0f);
+    EXPECT_EQ(matrix(1, 1), 0.0f);
+    EXPECT_EQ(matrix(1, 2), 0.0f);
+    EXPECT_EQ(&matrix(1, 0), matrix.data() + 3);
+
+    std::vector<float> values{5.0f, 6.0f, 7.0f};
+    linalg::DynamicMatrix<float> from_span(2, 2, values);
+    values[0] = 99.0f;
+    EXPECT_EQ(from_span(0, 0), 5.0f);
+    EXPECT_EQ(from_span(1, 1), 0.0f);
+    EXPECT_NE(from_span.data(), values.data());
+
+    const linalg::DynamicMatrix<float> filled(1, 2, 2.5f);
+    EXPECT_EQ(filled.at(0, 1), 2.5f);
+    EXPECT_THROW((void)filled.at(1, 0), std::out_of_range);
+    EXPECT_THROW((void)linalg::DynamicMatrix<float>(1, 2, {1.0f, 2.0f, 3.0f}),
+                 std::invalid_argument);
+}
+
+TEST(DynamicMatrixTest, FloatZeroDimensionsAndOverflow) {
+    const linalg::DynamicMatrix<float> zero_rows(0, 4);
+    const linalg::DynamicMatrix<float> zero_cols(4, 0);
+    EXPECT_EQ(zero_rows.rows(), 0U);
+    EXPECT_EQ(zero_rows.cols(), 4U);
+    EXPECT_TRUE(zero_rows.empty());
+    EXPECT_EQ(zero_cols.rows(), 4U);
+    EXPECT_EQ(zero_cols.cols(), 0U);
+    EXPECT_TRUE(zero_cols.empty());
+
+    constexpr auto maximum = std::numeric_limits<std::size_t>::max();
+    EXPECT_THROW((void)linalg::DynamicMatrix<float>(maximum, 2), std::length_error);
+}
+
+TEST(DynamicMatrixTest, FloatCopyMoveAndArithmetic) {
+    static_assert(std::is_nothrow_move_constructible_v<linalg::DynamicMatrix<float>>);
+    static_assert(std::is_nothrow_move_assignable_v<linalg::DynamicMatrix<float>>);
+
+    const linalg::DynamicMatrix<float> original{{1.0f, 2.0f}, {3.0f, 4.0f}};
+    linalg::DynamicMatrix<float> copy = original;
+    copy(0, 0) = 9.0f;
+    EXPECT_EQ(original(0, 0), 1.0f);
+    EXPECT_NE(original.data(), copy.data());
+
+    linalg::DynamicMatrix<float> moved = std::move(copy);
+    EXPECT_EQ(copy.rows(), 0U);
+    EXPECT_EQ(copy.cols(), 0U);
+    EXPECT_TRUE(copy.empty());
+    EXPECT_EQ(moved(0, 0), 9.0f);
+
+    linalg::DynamicMatrix<float> result;
+    result = std::move(moved);
+    EXPECT_EQ(moved.rows(), 0U);
+    EXPECT_EQ(moved.cols(), 0U);
+    EXPECT_EQ(result(0, 0), 9.0f);
+
+    result += original;
+    result -= original;
+    result += 1.0f;
+    result -= 1.0f;
+    result *= 2.0f;
+    EXPECT_EQ(result(0, 0), 18.0f);
+    EXPECT_EQ(result(1, 1), 8.0f);
+
+    const auto sum = original + original;
+    const auto difference = sum - original;
+    EXPECT_EQ(sum(1, 1), 8.0f);
+    EXPECT_EQ(difference(0, 1), 2.0f);
+    EXPECT_EQ((original * 2.0f)(1, 0), 6.0f);
+    EXPECT_EQ((2.0f * original)(1, 0), 6.0f);
+
+    const linalg::DynamicMatrix<float> wrong_shape(1, 4, 5.0f);
+    EXPECT_THROW(result += wrong_shape, std::invalid_argument);
+    EXPECT_THROW(result -= wrong_shape, std::invalid_argument);
+    EXPECT_EQ(result(0, 0), 18.0f);
+}

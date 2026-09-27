@@ -14,7 +14,8 @@ are intentionally being added incrementally.
 
 ### Matrix
 
-- contiguous row-major `double` storage;
+- contiguous row-major `float` or `double` storage through `DynamicMatrix<T>`;
+- `Matrix` remains an alias for `DynamicMatrix<double>`;
 - default, dimension, fill, flat-sequence, and nested initializer-list construction;
 - copy and move ownership semantics;
 - `rows()`, `cols()`, `size()`, `empty()`, and contiguous `data()` access;
@@ -27,6 +28,17 @@ are intentionally being added incrementally.
 - constructing a matrix by repeating a vector as rows or columns;
 - transpose and trace;
 - one, Frobenius, and infinity norms selected with `MatrixNorm`.
+
+For a float matrix, use `linalg::DynamicMatrix<float>`:
+
+```cpp
+linalg::DynamicMatrix<float> small{{1.0f, 2.0f}, {3.0f, 4.0f}};
+small *= 2.0f;
+```
+
+Construction, access, and arithmetic work for both scalar types. The free functions for
+transpose, trace, norms, broadcasting, and matrix multiplication currently accept the
+double-precision `Matrix` alias; their float versions are a later migration step.
 
 ### Vector
 
@@ -84,18 +96,18 @@ linalg::Vector one_value{3.0}; // one element containing 3.0
 linalg::Vector three_zeroes(3); // three zero-initialized elements
 ```
 
-The first scalar-generic container is `DynamicVector<T>`, currently supporting `float` and
-`double`. Its constructors, element access, and arithmetic work for both types:
+`DynamicVector<T>` likewise supports `float` and `double`. Its constructors, element access,
+and arithmetic work for both types:
 
 ```cpp
 linalg::DynamicVector<float> samples{1.0f, 2.0f, 3.0f};
 samples *= 2.0f;
 ```
 
-Existing `linalg::Vector` code still uses `double`. Matrix operations, vector norms, and
-normalization currently take that double-precision alias; their scalar-generic versions are a
-later migration step. Operations between different scalar types are not provided yet; convert
-elements explicitly when needed.
+Existing `linalg::Vector` code still uses `double`. Vector norms, normalization, and free
+functions involving both matrices and vectors currently take the double-precision aliases;
+their float versions are a later migration step. Operations between different scalar types are
+not provided yet; convert elements explicitly when needed.
 
 Vector addition and subtraction require equal sizes. Matrix addition and subtraction require equal
 shapes. Broadcast operations require a vector length matching the relevant matrix dimension.
