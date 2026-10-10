@@ -5,6 +5,7 @@ add_executable(
     approximate_test.cpp
     matrix_test.cpp
     operations_test.cpp
+    shared_operations_test.cpp
     static_matrix_test.cpp
     static_vector_test.cpp
     vector_test.cpp

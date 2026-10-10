@@ -200,20 +200,6 @@ Matrix repeat_as_columns(const Vector& values, Matrix::size_type column_count) {
     return result;
 }
 
-Matrix transpose(const Matrix& other) {
-    Matrix result(other.cols(), other.rows());
-    if (other.empty()) {
-        return result;
-    }
-
-    for (Matrix::size_type row = 0; row < other.rows(); ++row) {
-        for (Matrix::size_type col = 0; col < other.cols(); ++col) {
-            result(col, row) = other(row, col);
-        }
-    }
-    return result;
-}
-
 double trace(const Matrix& other) {
     if (other.empty() || other.cols() != other.rows()) {
         throw std::invalid_argument("matrix must be square and non-empty");
@@ -280,39 +266,6 @@ Vector normalize(const Vector& vector) {
     for (size_type index = 0; index < vector.size(); ++index) {
         result[index] = static_cast<double>((static_cast<long double>(vector[index]) / scale) / scaled_length);
     }
-    return result;
-}
-
-Vector multiply(const Matrix& matrix, const Vector& vector) {
-    if (matrix.cols() != vector.size()) {
-        throw std::invalid_argument("vector size must equal matrix column count");
-    }
-
-    Vector result(matrix.rows(), 0.0);
-    for (size_type row = 0; row < matrix.rows(); ++row) {
-        for (size_type col = 0; col < matrix.cols(); ++col) {
-            result[row] += matrix(row, col) * vector[col];
-        }
-    }
-
-    return result;
-}
-
-Matrix multiply(const Matrix& left, const Matrix& right) {
-    if (left.cols() != right.rows()) {
-        throw std::invalid_argument("left column count must equal right row count");
-    }
-
-    Matrix result(left.rows(), right.cols(), 0.0);
-
-    for (size_type row = 0; row < left.rows(); ++row) {
-        for (size_type col = 0; col < right.cols(); ++col) {
-            for (size_type inner = 0; inner < left.cols(); ++inner) {
-                result(row, col) += left(row, inner) * right(inner, col);
-            }
-        }
-    }
-
     return result;
 }
 

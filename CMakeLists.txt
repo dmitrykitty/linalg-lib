@@ -38,6 +38,7 @@ target_sources(
         TYPE HEADERS
         BASE_DIRS include
         FILES
+            include/linalg/internal/kernels.hpp
             include/linalg/internal/storage.hpp
             include/linalg/linalg.hpp
             include/linalg/matrix.hpp
