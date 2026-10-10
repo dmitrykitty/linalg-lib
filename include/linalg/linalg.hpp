@@ -2,5 +2,6 @@
 
 #include <linalg/matrix.hpp>
 #include <linalg/operations.hpp>
+#include <linalg/static_matrix.hpp>
 #include <linalg/vector.hpp>
 
