@@ -8,19 +8,34 @@
 
 namespace linalg::internal {
 
-// Storage-independent helpers; these are implementation details, not public API.
-constexpr void check_matrix_value_count(std::size_t count, std::size_t capacity) {
-    if (count > capacity) {
-        throw std::invalid_argument("too many values for matrix dimensions");
+// Rejects excess input; fewer values are allowed and zero-padded by the owner.
+constexpr void validate_input_fits(std::size_t input_count, std::size_t capacity) {
+    if (input_count > capacity) {
+        throw std::invalid_argument("input size exceeds storage capacity");
     }
 }
 
 // The owner checks capacity and zero-initializes storage before copying values.
 template <typename T>
-constexpr void copy_matrix_values(std::span<const T> values, T* destination) noexcept {
+constexpr void copy_values(std::span<const T> values, T* destination) noexcept {
     for (std::size_t index = 0; index < values.size(); ++index) {
         destination[index] = values[index];
     }
+}
+
+template <typename T>
+constexpr T& vector_element(T* data, std::size_t size, std::size_t index) noexcept {
+    (void)size;
+    assert(index < size);
+    return data[index];
+}
+
+template <typename T>
+constexpr T& checked_vector_element(T* data, std::size_t size, std::size_t index) {
+    if (index >= size) {
+        throw std::out_of_range("vector index is out of range");
+    }
+    return data[index];
 }
 
 // The owner validates the shape and zero-initializes storage before calling this.

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <linalg/internal/matrix_storage.hpp>
+#include <linalg/internal/storage.hpp>
 #include <linalg/scalar.hpp>
 
 #include <array>
@@ -35,7 +35,7 @@ public:
 
     explicit constexpr StaticMatrix(std::span<const T> values) {
         internal::validate_input_fits(values.size(), size());
-        internal::copy_matrix_values(values, data_.data());
+        internal::copy_values(values, data_.data());
     }
 
     // Missing rows/elements stay zero; supplied rows must fit the fixed shape.

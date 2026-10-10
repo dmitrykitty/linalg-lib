@@ -1,6 +1,6 @@
 #pragma once
 
-#include <linalg/internal/matrix_storage.hpp>
+#include <linalg/internal/storage.hpp>
 #include <linalg/scalar.hpp>
 
 #include <cstddef>
@@ -130,7 +130,7 @@ DynamicMatrix<T>::DynamicMatrix(size_type rows, size_type cols, std::span<const 
     internal::validate_input_fits(values.size(), element_count);
 
     data_.assign(element_count, T{});
-    internal::copy_matrix_values(values, data_.data());
+    internal::copy_values(values, data_.data());
 }
 
 template <FloatingScalar T>

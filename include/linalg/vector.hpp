@@ -1,8 +1,8 @@
 #pragma once
 
+#include <linalg/internal/storage.hpp>
 #include <linalg/scalar.hpp>
 
-#include <cassert>
 #include <cstddef>
 #include <initializer_list>
 #include <span>
@@ -36,14 +36,13 @@ public:
     DynamicVector& operator-=(T scalar) noexcept;
     DynamicVector& operator*=(T scalar) noexcept;
 
+    // A valid index is a precondition in Release builds.
     const T& operator[](size_type index) const noexcept {
-        assert(index < size());
-        return data_[index];
+        return internal::vector_element(data_.data(), size(), index);
     }
 
     T& operator[](size_type index) noexcept {
-        assert(index < size());
-        return data_[index];
+        return internal::vector_element(data_.data(), size(), index);
     }
 
     size_type size() const noexcept {
@@ -177,18 +176,12 @@ DynamicVector<T>& DynamicVector<T>::operator*=(T scalar) noexcept {
 
 template <FloatingScalar T>
 const T& DynamicVector<T>::at(size_type index) const {
-    if (index >= size()) {
-        throw std::out_of_range("vector index is out of range");
-    }
-    return data_[index];
+    return internal::checked_vector_element(data_.data(), size(), index);
 }
 
 template <FloatingScalar T>
 T& DynamicVector<T>::at(size_type index) {
-    if (index >= size()) {
-        throw std::out_of_range("vector index is out of range");
-    }
-    return data_[index];
+    return internal::checked_vector_element(data_.data(), size(), index);
 }
 
 template <FloatingScalar T>
