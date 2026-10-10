@@ -38,12 +38,13 @@ target_sources(
         TYPE HEADERS
         BASE_DIRS include
         FILES
-            include/linalg/internal/matrix_storage.hpp
+            include/linalg/internal/storage.hpp
             include/linalg/linalg.hpp
             include/linalg/matrix.hpp
             include/linalg/operations.hpp
             include/linalg/scalar.hpp
             include/linalg/static_matrix.hpp
+            include/linalg/static_vector.hpp
             include/linalg/vector.hpp
 )
 
