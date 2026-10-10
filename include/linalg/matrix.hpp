@@ -1,8 +1,8 @@
 #pragma once
 
+#include <linalg/internal/matrix_storage.hpp>
 #include <linalg/scalar.hpp>
 
-#include <cassert>
 #include <cstddef>
 #include <initializer_list>
 #include <span>
@@ -33,15 +33,11 @@ public:
 
     // Valid row and column indices are a precondition in Release builds.
     const T& operator()(size_type row, size_type col) const noexcept {
-        assert(row < rows_);
-        assert(col < cols_);
-        return data_[row * cols_ + col];
+        return internal::matrix_element(data_.data(), rows_, cols_, row, col);
     }
 
     T& operator()(size_type row, size_type col) noexcept {
-        assert(row < rows_);
-        assert(col < cols_);
-        return data_[row * cols_ + col];
+        return internal::matrix_element(data_.data(), rows_, cols_, row, col);
     }
 
     DynamicMatrix& operator+=(const DynamicMatrix&);
@@ -78,7 +74,8 @@ public:
     T& at(size_type row, size_type col);
 
 private:
-    static size_type checked_element_count(size_type rows, size_type cols);
+    // Returns rows * cols; throws length_error if the dimensions exceed storage limits.
+    static size_type calculate_element_count(size_type rows, size_type cols);
 
     size_type rows_ = 0;
     size_type cols_ = 0;
@@ -119,7 +116,7 @@ DynamicMatrix<T>::DynamicMatrix(size_type rows, size_type cols)
 
 template <FloatingScalar T>
 DynamicMatrix<T>::DynamicMatrix(size_type rows, size_type cols, T value)
-    : rows_(rows), cols_(cols), data_(checked_element_count(rows, cols), value) {}
+    : rows_(rows), cols_(cols), data_(calculate_element_count(rows, cols), value) {}
 
 template <FloatingScalar T>
 DynamicMatrix<T>::DynamicMatrix(
@@ -129,17 +126,11 @@ DynamicMatrix<T>::DynamicMatrix(
 template <FloatingScalar T>
 DynamicMatrix<T>::DynamicMatrix(size_type rows, size_type cols, std::span<const T> values)
     : rows_(rows), cols_(cols) {
-    const size_type element_count = checked_element_count(rows, cols);
-    if (values.size() > element_count) {
-        throw std::invalid_argument("too many values for matrix dimensions");
-    }
+    const size_type element_count = calculate_element_count(rows, cols);
+    internal::validate_input_fits(values.size(), element_count);
 
     data_.assign(element_count, T{});
-    size_type index = 0;
-    for (const T value : values) {
-        data_[index] = value;
-        ++index;
-    }
+    internal::copy_matrix_values(values, data_.data());
 }
 
 template <FloatingScalar T>
@@ -151,16 +142,8 @@ DynamicMatrix<T>::DynamicMatrix(std::initializer_list<std::initializer_list<T>> 
         }
     }
 
-    data_.assign(checked_element_count(rows_, cols_), T{});
-    size_type row_index = 0;
-    for (const auto& row : rows) {
-        size_type col_index = 0;
-        for (const T value : row) {
-            data_[row_index * cols_ + col_index] = value;
-            ++col_index;
-        }
-        ++row_index;
-    }
+    data_.assign(calculate_element_count(rows_, cols_), T{});
+    internal::copy_matrix_rows(rows, cols_, data_.data());
 }
 
 template <FloatingScalar T>
@@ -232,22 +215,16 @@ DynamicMatrix<T>& DynamicMatrix<T>::operator*=(T scalar) noexcept {
 
 template <FloatingScalar T>
 const T& DynamicMatrix<T>::at(size_type row, size_type col) const {
-    if (row >= rows_ || col >= cols_) {
-        throw std::out_of_range("matrix index is out of range");
-    }
-    return data_[row * cols_ + col];
+    return internal::checked_matrix_element(data_.data(), rows_, cols_, row, col);
 }
 
 template <FloatingScalar T>
 T& DynamicMatrix<T>::at(size_type row, size_type col) {
-    if (row >= rows_ || col >= cols_) {
-        throw std::out_of_range("matrix index is out of range");
-    }
-    return data_[row * cols_ + col];
+    return internal::checked_matrix_element(data_.data(), rows_, cols_, row, col);
 }
 
 template <FloatingScalar T>
-DynamicMatrix<T>::size_type DynamicMatrix<T>::checked_element_count(
+DynamicMatrix<T>::size_type DynamicMatrix<T>::calculate_element_count(
     size_type rows, size_type cols) {
     const size_type max_size = std::vector<T>{}.max_size();
     if (rows != 0 && cols > max_size / rows) {

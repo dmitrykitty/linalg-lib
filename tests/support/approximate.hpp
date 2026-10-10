@@ -9,7 +9,7 @@
 
 namespace linalg::test {
 
-namespace detail {
+namespace internal {
 
 inline void validate_tolerances(
     double absolute_tolerance,
@@ -38,15 +38,15 @@ inline bool almost_equal_unchecked(
     return difference <= absolute_tolerance + relative_tolerance * scale;
 }
 
-} // namespace detail
+} // namespace internal
 
 inline bool almost_equal(
     double actual,
     double expected,
     double absolute_tolerance,
     double relative_tolerance) {
-    detail::validate_tolerances(absolute_tolerance, relative_tolerance);
-    return detail::almost_equal_unchecked(
+    internal::validate_tolerances(absolute_tolerance, relative_tolerance);
+    return internal::almost_equal_unchecked(
         actual, expected, absolute_tolerance, relative_tolerance);
 }
 
@@ -55,14 +55,14 @@ inline bool almost_equal(
     const Vector& expected,
     double absolute_tolerance,
     double relative_tolerance) {
-    detail::validate_tolerances(absolute_tolerance, relative_tolerance);
+    internal::validate_tolerances(absolute_tolerance, relative_tolerance);
 
     if (actual.size() != expected.size()) {
         return false;
     }
 
     for (Vector::size_type index = 0; index < actual.size(); ++index) {
-        if (!detail::almost_equal_unchecked(
+        if (!internal::almost_equal_unchecked(
                 actual[index],
                 expected[index],
                 absolute_tolerance,
@@ -78,14 +78,14 @@ inline bool almost_equal(
     const Matrix& expected,
     double absolute_tolerance,
     double relative_tolerance) {
-    detail::validate_tolerances(absolute_tolerance, relative_tolerance);
+    internal::validate_tolerances(absolute_tolerance, relative_tolerance);
 
     if (actual.rows() != expected.rows() || actual.cols() != expected.cols()) {
         return false;
     }
 
     for (Matrix::size_type index = 0; index < actual.size(); ++index) {
-        if (!detail::almost_equal_unchecked(
+        if (!internal::almost_equal_unchecked(
                 actual.data()[index],
                 expected.data()[index],
                 absolute_tolerance,
