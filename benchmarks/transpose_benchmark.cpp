@@ -96,6 +96,13 @@ linalg::Matrix transpose_source_row_pointer(const linalg::Matrix& input) {
     return result;
 }
 
+// Preserve the original source-contiguous end-to-end benchmark as a reference.
+linalg::Matrix transpose_indexed_reference(const linalg::Matrix& input) {
+    linalg::Matrix result(input.cols(), input.rows());
+    transpose_indexed_row_col_traversal_kernel(input, result);
+    return result;
+}
+
 linalg::Matrix transpose_destination_row_pointer(const linalg::Matrix& input) {
     linalg::Matrix result(input.cols(), input.rows());
     transpose_destination_row_pointer_kernel(input, result);
@@ -118,7 +125,7 @@ void benchmark_transpose_end_to_end(
     const auto rows = static_cast<size_type>(state.range(0));
     const auto cols = static_cast<size_type>(state.range(1));
     const linalg::Matrix input = make_transpose_input(rows, cols);
-    const linalg::Matrix expected = linalg::transpose(input);
+    const linalg::Matrix expected = transpose_indexed_reference(input);
 
     if (!matrices_equal(operation(input), expected)) {
         state.SkipWithError("transpose candidate produced an incorrect result");
@@ -140,7 +147,7 @@ void benchmark_transpose_kernel(benchmark::State& state, Kernel kernel) {
     const auto rows = static_cast<size_type>(state.range(0));
     const auto cols = static_cast<size_type>(state.range(1));
     const linalg::Matrix input = make_transpose_input(rows, cols);
-    const linalg::Matrix expected = linalg::transpose(input);
+    const linalg::Matrix expected = transpose_indexed_reference(input);
     linalg::Matrix result(cols, rows);
 
     kernel(input, result);
@@ -160,7 +167,19 @@ void benchmark_transpose_kernel(benchmark::State& state, Kernel kernel) {
 }
 
 void BM_TransposeIndexedEndToEnd(benchmark::State& state) {
-    benchmark_transpose_end_to_end(state, linalg::transpose);
+    benchmark_transpose_end_to_end(state, transpose_indexed_reference);
+}
+
+void BM_TransposeLibraryEndToEnd(benchmark::State& state) {
+    benchmark_transpose_end_to_end(state, [](const linalg::Matrix& input) {
+        return linalg::transpose(input);
+    });
+}
+
+void BM_TransposeLibraryKernel(benchmark::State& state) {
+    benchmark_transpose_kernel(state, [](const linalg::Matrix& input, linalg::Matrix& output) {
+        linalg::internal::transpose_into(input, output);
+    });
 }
 
 void BM_TransposeSourceRowPointerEndToEnd(benchmark::State& state) {
@@ -198,6 +217,8 @@ void add_transpose_sizes(benchmark::Benchmark* registration) {
 }
 
 BENCHMARK(BM_TransposeIndexedEndToEnd)->Apply(add_transpose_sizes);
+BENCHMARK(BM_TransposeLibraryEndToEnd)->Apply(add_transpose_sizes);
+BENCHMARK(BM_TransposeLibraryKernel)->Apply(add_transpose_sizes);
 BENCHMARK(BM_TransposeSourceRowPointerEndToEnd)->Apply(add_transpose_sizes);
 BENCHMARK(BM_TransposeDestinationRowPointerEndToEnd)->Apply(add_transpose_sizes);
 BENCHMARK(BM_TransposeIndexedColRowKernel)->Apply(add_transpose_sizes);

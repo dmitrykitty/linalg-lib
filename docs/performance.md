@@ -60,8 +60,9 @@ access, or by which side of the copy is traversed contiguously?
 | Indexed column-row | Destination writes | Source reads are strided |
 | Destination-row pointer | Destination writes | Source reads are strided |
 
-Each kernel uses a preallocated output matrix. Candidate correctness is checked against the public
-transpose before timing. For an `N x N` matrix of doubles, logical traffic is reported as
+Each kernel uses a preallocated output matrix. Candidate correctness is now checked against an
+independent indexed row-column reference before timing. For an `N x N` matrix of doubles, logical
+traffic is reported as
 `2 x N^2 x sizeof(double)` for one read and one write per element.
 
 ### Exploratory traversal comparison
@@ -99,8 +100,10 @@ generated assembly also contained essentially the same hot inner loop for both v
 result supports using the clearer indexed implementation: inlining and optimization remove the
 abstraction cost, while traversal order controls the important memory behavior.
 
-The public transpose has not yet been switched to the destination-contiguous indexed traversal;
-that change should follow validation across all registered square and rectangular shapes.
+The shared library transpose now uses destination-contiguous indexed column-row traversal for
+both dynamic and static matrices, with `float` and `double` support. The independent row-column
+reference remains in the benchmarks; `BM_TransposeLibrary*` measures the selected implementation.
+The historical table above is unchanged and is not a measurement of every new instantiation.
 
 ## Experiment 2 -- adding a vector to each row
 
@@ -252,6 +255,106 @@ Next, profile representative `ikj`, `kij`, and `jki` cases at `512x512x512` and 
 rectangular shapes. Useful evidence includes cycles, instructions, IPC, L1/L2/LLC misses, and
 possibly TLB events. Cache blocking should be introduced only after those baseline profiles are
 recorded.
+
+### Selected library default
+
+The shared `internal::matmul_into` uses `ikj` for dynamic and static matrices, preserving the
+scalar type (`float` or `double`). It caches `A(i,k)` outside the inner loop, then walks `B(k,j)`
+and `C(i,j)` contiguously. This is the strongest default supported by the existing plots: it
+wins the larger squares and two of the three rectangular shapes. `kij` wins the wide-output
+`64/1024/1024` case, so no universally optimal order or unmeasured shape-dispatch heuristic is
+claimed. All six experimental kernels remain available for comparison.
+
+Public overloads create a result of the appropriate ownership and shape, then call the same
+kernel. The internal kernel clears the output on every call, including when its previous contents
+are nonzero. End-to-end matmul also includes the result container's zero initialization; this may
+duplicate clearing work, so kernel-only and end-to-end results must be kept separate. No
+uninitialized-storage constructor has been introduced just to avoid that cost.
+
+`BM_MatMulReferenceEndToEnd` remains an independent `ijk` implementation rather than silently
+changing to the new default. `BM_MatMulLibraryKernel` and `BM_MatMulLibraryEndToEnd` explicitly
+measure the library. The original charts are double-precision dynamic-container experiments;
+they do not establish performance for `float` or fixed-size matrices.
+
+## Shared-kernel validation -- 2026-10-10
+
+Release and ASan/UBSan configurations both pass all 147 tests, including 24 new typed runtime
+tests across `float` and `double`. The added coverage checks dynamic/static results, independent
+higher-precision reference values, empty dimensions, input preservation, repeated output-buffer
+reuse, and non-finite arithmetic. Compile-time assertions check fixed result shapes, rejected
+incompatible operands, and small `constexpr` examples.
+
+The performance check uses the same CPU/compiler/build configuration listed above, but the WSL
+kernel is now `6.18.40.1-microsoft-standard-WSL2`. Both runs are pinned to logical CPU 10. Source
+baseline is commit `347d2b4f70fa640c4e0d9619df0b765986810352` plus the uncommitted shared-kernel
+changes; the commit alone does not reproduce this implementation. No hardware counters were
+collected.
+
+The broad check covers all eight registered matmul shapes and all seven transpose shapes:
+75 benchmark cases, seven repetitions each, no correctness errors. The JSON retains all 525
+individual run records as well as aggregates. `--benchmark_display_aggregates_only` only reduces
+console output; it does not discard raw repetitions from the JSON.
+
+```bash
+taskset -c 10 ./build/release/benchmarks/linalg_benchmarks \
+    --benchmark_filter='^(BM_MatMul(ReferenceEndToEnd|LibraryEndToEnd|LibraryKernel|IkjKernel|KijKernel)|BM_Transpose(LibraryKernel|LibraryEndToEnd|IndexedEndToEnd|IndexedColRowKernel|IndexedRowColKernel))/' \
+    --benchmark_min_time=0.05s \
+    --benchmark_min_warmup_time=0.02 \
+    --benchmark_repetitions=7 \
+    --benchmark_enable_random_interleaving=true \
+    --benchmark_display_aggregates_only=true \
+    --benchmark_context=implementation=shared-operations-ikj-col-row \
+    --benchmark_out=benchmark-results/shared-operations-2026-10-10.json \
+    --benchmark_out_format=json
+```
+
+Selected **end-to-end** CPU medians compare the new library against the independent old traversal,
+not against the slowest experimental loop order. Matmul uses M/N/K; transpose uses rows/columns.
+
+| Operation / shape | Old reference median | Reference CV | Library median | Library CV | Reference/library time ratio |
+|---|---:|---:|---:|---:|---:|
+| Matmul 256/256/256 | 26.429 ms | 17.48% | 5.917 ms | 12.71% | 4.47x |
+| Matmul 512/512/512 | 223.381 ms | 8.28% | 47.473 ms | 6.21% | 4.71x |
+| Matmul 64/1024/1024 | 137.971 ms | 7.01% | 44.571 ms | 18.81% | 3.10x |
+| Transpose 512/512 | 850.5 us | 21.01% | 450.5 us | 12.34% | 1.89x |
+
+These short runs confirm the broad traversal advantage; their noise does not support precise
+speedup guarantees or ranking nearly tied variants. In particular, the library transpose
+511/513 kernel has a 77.86% CV, and library matmul 512/512/512 has a 27.67% CV. A longer focused
+repeat therefore compares the shared kernels against independent candidates with the same loop
+order, saving a separate JSON rather than overwriting the broad run:
+
+```bash
+taskset -c 10 ./build/release/benchmarks/linalg_benchmarks \
+    --benchmark_filter='^(BM_MatMul(LibraryKernel|IkjKernel)/512/512/512|BM_Transpose(LibraryKernel|IndexedColRowKernel)/(512/512|511/513))$' \
+    --benchmark_min_time=0.2s \
+    --benchmark_min_warmup_time=0.1 \
+    --benchmark_repetitions=9 \
+    --benchmark_enable_random_interleaving=true \
+    --benchmark_display_aggregates_only=true \
+    --benchmark_context=implementation=shared-operations-focused-check \
+    --benchmark_out=benchmark-results/shared-operations-2026-10-10-focus.json \
+    --benchmark_out_format=json
+```
+
+The focused run completed all six cases without correctness errors. Its **kernel-only** CPU
+medians are:
+
+| Operation / shape | Independent same-order candidate | Candidate CV | Shared library kernel | Library CV |
+|---|---:|---:|---:|---:|
+| Matmul 512/512/512 (`ikj`) | 51.662 ms | 2.71% | 50.235 ms | 6.03% |
+| Transpose 512/512 (column-row) | 448.5 us | 16.66% | 437.1 us | 3.36% |
+| Transpose 511/513 (column-row) | 138.1 us | 8.29% | 156.7 us | 21.47% |
+
+The same-order matmul and 512-square transpose differences are small relative to the observed
+variation. The odd-sized transpose remains noisy and its library median is higher; this run does
+not establish a consistent overhead or a win from extraction. It should be revisited in a quieter
+environment before making stronger claims. These measurements are validation checks, not a
+replacement for the longer historical experiment.
+
+Both JSON files are local, ignored benchmark artifacts. The historical chart dataset under
+`docs/data/` remains unchanged. This validation measures dynamic `double` performance only;
+static and `float` variants are verified for correctness, not benchmarked here.
 
 ## Current conclusions
 

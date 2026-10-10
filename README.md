@@ -5,7 +5,7 @@ demonstrate ownership-aware C++ design, numerical reasoning, benchmarking, profi
 optimization, SIMD, and concurrency through incremental, measured development.
 
 The project currently has its owning `Matrix` and `Vector` foundations plus the first Phase 2
-operations: arithmetic, broadcasting, transpose, trace, and vector/matrix norms. Performance
+operations: arithmetic, broadcasting, transpose, multiplication, trace, and vector/matrix norms. Performance
 experiments compare alternative traversal and access strategies before changing public
 implementations. More advanced numerical algorithms and optimized matrix multiplication kernels
 are intentionally being added incrementally.
@@ -23,7 +23,7 @@ are intentionally being added incrementally.
 - in-place matrix addition and subtraction;
 - in-place scalar addition, subtraction, and multiplication;
 - value-returning addition, subtraction, and scalar multiplication;
-- matrix-vector and reference matrix-matrix multiplication;
+- matrix-vector and cache-friendly matrix-matrix multiplication (`ikj` traversal);
 - adding a vector to every row or every column;
 - constructing a matrix by repeating a vector as rows or columns;
 - transpose and trace;
@@ -36,9 +36,9 @@ linalg::DynamicMatrix<float> small{{1.0f, 2.0f}, {3.0f, 4.0f}};
 small *= 2.0f;
 ```
 
-Construction, access, and arithmetic work for both scalar types. The free functions for
-transpose, trace, norms, broadcasting, and matrix multiplication currently accept the
-double-precision `Matrix` alias; their float versions are a later migration step.
+Construction, access, arithmetic, transpose, matrix-vector multiplication, and matrix-matrix
+multiplication work for both scalar types. Trace, norms, broadcasting, and repeating vectors
+currently accept the double-precision aliases; their float versions are a later migration step.
 
 ### Static matrix
 
@@ -53,10 +53,11 @@ constexpr linalg::StaticMatrix<float, 2, 2> identity{{1.0f, 0.0f}, {0.0f, 1.0f}}
 static_assert(identity(1, 1) == 1.0f);
 ```
 
-This first step provides construction, ownership, and the same core access API as dynamic
-matrices: `rows()`, `cols()`, `size()`, `empty()`, `data()`, `operator()`, and `at()`. Arithmetic,
-transpose, multiplication, and dynamic/static conversions are not provided for static matrices
-yet. The existing mathematical free functions still accept the dynamic `double` aliases.
+Static matrices provide construction, ownership, and the same core access API as dynamic
+matrices: `rows()`, `cols()`, `size()`, `empty()`, `data()`, `operator()`, and `at()`. Transpose,
+matrix-matrix multiplication, and matrix-vector multiplication support both scalar types and
+return fixed-shape results. Elementwise arithmetic, norms, trace, and dynamic/static conversions
+are not provided for static matrices yet.
 
 - Default construction fills every element with zero.
 - Parentheses fill every element: `StaticMatrix<double, 2, 3>(4.0)`.
@@ -71,8 +72,9 @@ yet. The existing mathematical free functions still accept the dynamic `double` 
 - Copies own independent storage. Compiler-generated moves operate on the inline array;
   both objects keep their fixed shape, and moving `float`/`double` elements copies their values.
 
-Construction and access support `constexpr`, so valid small examples can be evaluated at compile
-time. Ordinary calls still execute at runtime. Inline storage avoids a separate heap allocation,
+Construction, access, transpose, and multiplication support `constexpr`, so valid small examples
+can be evaluated at compile time. Ordinary calls still execute at runtime. Inline storage avoids
+a separate heap allocation,
 but the object's location determines whether that storage is on the stack, heap, or elsewhere.
 Prefer dynamic matrices for large or runtime-sized shapes.
 
@@ -120,9 +122,9 @@ are rejected at compile time. Inline storage has no separate heap allocation. Co
 moves use the compiler-generated `std::array` behavior: each object retains its fixed length
 and independent storage, and moving `float`/`double` values copies them.
 
-Construction and access support `constexpr`. Static vector arithmetic, norms, normalization,
-matrix-vector multiplication, and dynamic/static conversions will be added with shared
-mathematical operations in a later step. Existing dynamic vector behavior remains unchanged.
+Construction and access support `constexpr`. Multiplying a matching static matrix by a static
+vector returns a static vector and also supports constant evaluation. Static vector arithmetic,
+norms, normalization, and dynamic/static conversions remain later steps.
 
 Matrices and static vectors reuse input validation and copying helpers in
 `include/linalg/internal/storage.hpp`.
@@ -179,15 +181,44 @@ linalg::DynamicVector<float> samples{1.0f, 2.0f, 3.0f};
 samples *= 2.0f;
 ```
 
-Existing `linalg::Vector` code still uses `double`. Vector norms, normalization, and free
-functions involving both matrices and vectors currently take the double-precision aliases;
-their float versions are a later migration step. Operations between different scalar types are
-not provided yet; convert elements explicitly when needed.
+Existing `linalg::Vector` code still uses `double`. Vector norms, normalization, and broadcast
+functions currently take the double-precision aliases; their float versions are a later migration
+step. Matrix-vector multiplication supports both scalar types. Operations between different
+scalar types are not provided yet; convert elements explicitly when needed.
 
 Vector addition and subtraction require equal sizes. Matrix addition and subtraction require equal
 shapes. Broadcast operations require a vector length matching the relevant matrix dimension.
 Trace requires a square, non-empty matrix. Invalid dimensions throw `std::invalid_argument`;
 checked element access throws `std::out_of_range`.
+
+### Shared transpose and multiplication
+
+The public operations select the result container; each calculation lives in one shared kernel
+under `include/linalg/internal/kernels.hpp`. These internal helpers overwrite a preallocated,
+non-aliasing result and are not public API. No inheritance or duplicated dynamic/static loops are
+needed.
+
+```cpp
+linalg::DynamicMatrix<float> dynamic{{1.0f, 2.0f}, {3.0f, 4.0f}};
+auto dynamic_product = linalg::multiply(dynamic, dynamic); // DynamicMatrix<float>
+
+constexpr linalg::StaticMatrix<double, 2, 3> fixed{{1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}};
+constexpr linalg::StaticVector<double, 3> vector{7.0, 8.0, 9.0};
+constexpr auto transposed = linalg::transpose(fixed); // StaticMatrix<double, 3, 2>
+constexpr auto applied = linalg::multiply(fixed, vector); // StaticVector<double, 2>
+constexpr auto product = linalg::multiply(fixed, transposed); // StaticMatrix<double, 2, 2>
+static_assert(applied[0] == 50.0 && product(0, 0) == 14.0);
+```
+
+Dynamic multiplication checks dimensions at runtime and throws `std::invalid_argument` on a
+mismatch. Incompatible static multiplication shapes have no matching overload and are rejected
+at compile time. Public multiplication currently requires the same scalar type and either two
+dynamic operands or two static operands; mixed ownership is not exposed yet.
+
+The library uses indexed column-row transpose (contiguous destination writes) and `ikj` matmul
+(contiguous reads of the right matrix and updates of the result). The existing
+[performance plots and explanation](docs/performance.md) motivate these defaults. `ikj` is a
+measured general default, not the fastest order for every rectangular shape.
 
 ## Requirements
 
@@ -273,8 +304,11 @@ options, reusable Python API, plot selection, Markdown embedding, and troublesho
 
 Benchmarks are separated by operation family in `benchmarks/`, while one executable and Google
 Benchmark's regular-expression filter provide a common runner. Current experiments include
-broadcasting, transpose, trace, and all six scalar matmul loop orders. Kernel-only timings use a
-preallocated result, while end-to-end timings also include result allocation.
+broadcasting, transpose, trace, and all six scalar matmul loop orders. `BM_MatMulLibrary*` and
+`BM_TransposeLibrary*` measure the shared library implementations. Historical reference cases
+remain independent: matmul uses `ijk`, and `BM_TransposeIndexedEndToEnd` uses row-column traversal.
+Kernel-only timings use a preallocated result, while end-to-end timings also include result
+allocation and destruction.
 
 The main findings so far are:
 

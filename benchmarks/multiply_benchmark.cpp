@@ -18,11 +18,10 @@ void clear_result(Matrix& result) noexcept {
 }
 
 //each result(row, col) calculated one by one (rows by rows)
-void multiply_ijk_kernel(
+void accumulate_ijk(
     Matrix& result,
     const Matrix& left,
     const Matrix& right) {
-    clear_result(result);
     for (size_type row = 0; row < left.rows(); ++row) {
         for (size_type col = 0; col < right.cols(); ++col) {
             for (size_type inner = 0; inner < left.cols(); ++inner) {
@@ -30,6 +29,18 @@ void multiply_ijk_kernel(
             }
         }
     }
+}
+
+void multiply_ijk_kernel(Matrix& result, const Matrix& left, const Matrix& right) {
+    clear_result(result);
+    accumulate_ijk(result, left, right);
+}
+
+// Keep an independent ijk oracle and the historical reference end-to-end case.
+Matrix multiply_reference(const Matrix& left, const Matrix& right) {
+    Matrix result(left.rows(), right.cols());
+    accumulate_ijk(result, left, right);
+    return result;
 }
 
 //each row from result calculated partially 
@@ -140,7 +151,7 @@ template <typename Operation>
 bool kernel_is_correct(Operation operation) {
     const Matrix left = make_input(5, 7, 3);
     const Matrix right = make_input(7, 3, 11);
-    const Matrix expected = linalg::multiply(left, right);
+    const Matrix expected = multiply_reference(left, right);
     Matrix result(expected.rows(), expected.cols(), 42.0);
 
     operation(result, left, right);
@@ -199,7 +210,8 @@ void benchmark_kernel(benchmark::State& state, Operation operation) {
     set_matmul_counters(state, rows, cols, inner);
 }
 
-void benchmark_reference_end_to_end(benchmark::State& state) {
+template <typename Operation>
+void benchmark_end_to_end(benchmark::State& state, Operation operation) {
     const auto rows = static_cast<size_type>(state.range(0));
     const auto cols = static_cast<size_type>(state.range(1));
     const auto inner = static_cast<size_type>(state.range(2));
@@ -208,7 +220,7 @@ void benchmark_reference_end_to_end(benchmark::State& state) {
 
     for (auto _ : state) {
         (void)_;
-        Matrix result = linalg::multiply(left, right);
+        Matrix result = operation(left, right);
         benchmark::DoNotOptimize(result.data());
         benchmark::ClobberMemory();
     }
@@ -217,7 +229,19 @@ void benchmark_reference_end_to_end(benchmark::State& state) {
 }
 
 void BM_MatMulReferenceEndToEnd(benchmark::State& state) {
-    benchmark_reference_end_to_end(state);
+    benchmark_end_to_end(state, multiply_reference);
+}
+
+void BM_MatMulLibraryEndToEnd(benchmark::State& state) {
+    benchmark_end_to_end(state, [](const Matrix& left, const Matrix& right) {
+        return linalg::multiply(left, right);
+    });
+}
+
+void BM_MatMulLibraryKernel(benchmark::State& state) {
+    benchmark_kernel(state, [](Matrix& result, const Matrix& left, const Matrix& right) {
+        linalg::internal::matmul_into(left, right, result);
+    });
 }
 
 void BM_MatMulIjkKernel(benchmark::State& state) {
@@ -256,6 +280,8 @@ void add_matmul_sizes(benchmark::Benchmark* registration) {
 }
 
 BENCHMARK(BM_MatMulReferenceEndToEnd)->Apply(add_matmul_sizes);
+BENCHMARK(BM_MatMulLibraryEndToEnd)->Apply(add_matmul_sizes);
+BENCHMARK(BM_MatMulLibraryKernel)->Apply(add_matmul_sizes);
 BENCHMARK(BM_MatMulIjkKernel)->Apply(add_matmul_sizes);
 BENCHMARK(BM_MatMulIkjKernel)->Apply(add_matmul_sizes);
 BENCHMARK(BM_MatMulJikKernel)->Apply(add_matmul_sizes);
