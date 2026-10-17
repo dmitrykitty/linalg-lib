@@ -1,5 +1,6 @@
 #pragma once
 
+#include <linalg/internal/gemm.hpp>
 #include <linalg/internal/kernels.hpp>
 #include <linalg/matrix.hpp>
 #include <linalg/static_matrix.hpp>
@@ -82,7 +83,10 @@ DynamicMatrix<T> multiply(const DynamicMatrix<T>& left, const DynamicMatrix<T>& 
         throw std::invalid_argument("left column count must equal right row count");
     }
     DynamicMatrix<T> result(left.rows(), right.cols());
-    internal::matmul_into(left, right, result);
+    // Runtime-sized products use the blocked, packed GEMM; static products keep the
+    // constexpr ikj kernel.
+    internal::gemm(left.rows(), right.cols(), left.cols(), left.data(), left.cols(),
+                   right.data(), right.cols(), result.data(), result.cols());
     return result;
 }
 

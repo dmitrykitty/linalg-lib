@@ -32,12 +32,14 @@ add_library(linalg::linalg ALIAS linalg)
 target_sources(
     linalg
     PRIVATE
+        src/gemm.cpp
         src/operations.cpp
     PUBLIC
         FILE_SET public_headers
         TYPE HEADERS
         BASE_DIRS include
         FILES
+            include/linalg/internal/gemm.hpp
             include/linalg/internal/kernels.hpp
             include/linalg/internal/storage.hpp
             include/linalg/linalg.hpp
