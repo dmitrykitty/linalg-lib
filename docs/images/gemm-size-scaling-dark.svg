@@ -1,0 +1,254 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="920" height="456" viewBox="0 0 920 456" font-family='system-ui, -apple-system, "Segoe UI", sans-serif' role="img">
+<title>GEMM throughput by matrix size</title>
+<rect width="920" height="456" rx="8" fill="#1a1a19"/>
+<text x="24.0" y="32.0" font-size="15" text-anchor="start" font-weight="600" fill="#f0efec">GEMM throughput by matrix size (GFLOP/s, log-log, higher is better)</text>
+<text x="24.0" y="52.0" font-size="12" text-anchor="start" font-weight="400" fill="#c3c2b7">Square n × n × n, median of 5 runs · i7-10750H, 6 cores at fixed 2.6 GHz, SMT off · 2026-10-18</text>
+<circle cx="29.0" cy="74.0" r="5" fill="#d55181"/>
+<text x="42.0" y="78.0" font-size="12" text-anchor="start" font-weight="400" fill="#c3c2b7">naive ijk</text>
+<circle cx="118.4" cy="74.0" r="5" fill="#c98500"/>
+<text x="131.4" y="78.0" font-size="12" text-anchor="start" font-weight="400" fill="#c3c2b7">ikj loop order</text>
+<circle cx="240.8" cy="74.0" r="5" fill="#199e70"/>
+<text x="253.8" y="78.0" font-size="12" text-anchor="start" font-weight="400" fill="#c3c2b7">blocked + packed, portable kernel</text>
+<circle cx="488.6" cy="74.0" r="5" fill="#3987e5"/>
+<text x="501.6" y="78.0" font-size="12" text-anchor="start" font-weight="400" fill="#c3c2b7">blocked + AVX2/FMA, 1 thread</text>
+<circle cx="29.0" cy="94.0" r="5" fill="#d95926"/>
+<text x="42.0" y="98.0" font-size="12" text-anchor="start" font-weight="400" fill="#c3c2b7">blocked + AVX2/FMA, 6 threads</text>
+<line x1="243.4" y1="94.0" x2="259.4" y2="94.0" stroke="#3987e5" stroke-width="2" stroke-dasharray="5 4"/>
+<text x="263.4" y="98.0" font-size="12" text-anchor="start" font-weight="400" fill="#c3c2b7">OpenBLAS 0.3.32, 1 thread</text>
+<line x1="438.4" y1="94.0" x2="454.4" y2="94.0" stroke="#d95926" stroke-width="2" stroke-dasharray="5 4"/>
+<text x="458.4" y="98.0" font-size="12" text-anchor="start" font-weight="400" fill="#c3c2b7">OpenBLAS 0.3.32, 6 threads</text>
+<text x="24.0" y="126.0" font-size="13" text-anchor="start" font-weight="600" fill="#f0efec">double</text>
+<line x1="70.0" y1="416.0" x2="443.0" y2="416.0" stroke="#2c2c2a" stroke-width="1.0" stroke-linecap="round"/>
+<text x="62.0" y="420.0" font-size="11" text-anchor="end" font-weight="400" fill="#898781">0.1</text>
+<line x1="70.0" y1="347.5" x2="443.0" y2="347.5" stroke="#2c2c2a" stroke-width="1.0" stroke-linecap="round"/>
+<text x="62.0" y="351.5" font-size="11" text-anchor="end" font-weight="400" fill="#898781">1</text>
+<line x1="70.0" y1="279.0" x2="443.0" y2="279.0" stroke="#2c2c2a" stroke-width="1.0" stroke-linecap="round"/>
+<text x="62.0" y="283.0" font-size="11" text-anchor="end" font-weight="400" fill="#898781">10</text>
+<line x1="70.0" y1="210.5" x2="443.0" y2="210.5" stroke="#2c2c2a" stroke-width="1.0" stroke-linecap="round"/>
+<text x="62.0" y="214.5" font-size="11" text-anchor="end" font-weight="400" fill="#898781">100</text>
+<line x1="70.0" y1="142.0" x2="443.0" y2="142.0" stroke="#2c2c2a" stroke-width="1.0" stroke-linecap="round"/>
+<text x="62.0" y="146.0" font-size="11" text-anchor="end" font-weight="400" fill="#898781">1,000</text>
+<text x="70.0" y="434.0" font-size="11" text-anchor="middle" font-weight="400" fill="#898781">64</text>
+<text x="132.2" y="434.0" font-size="11" text-anchor="middle" font-weight="400" fill="#898781">128</text>
+<text x="194.3" y="434.0" font-size="11" text-anchor="middle" font-weight="400" fill="#898781">256</text>
+<text x="256.5" y="434.0" font-size="11" text-anchor="middle" font-weight="400" fill="#898781">512</text>
+<text x="318.7" y="434.0" font-size="11" text-anchor="middle" font-weight="400" fill="#898781">1024</text>
+<text x="380.8" y="434.0" font-size="11" text-anchor="middle" font-weight="400" fill="#898781">2048</text>
+<text x="443.0" y="434.0" font-size="11" text-anchor="middle" font-weight="400" fill="#898781">4096</text>
+<line x1="70.0" y1="416.0" x2="443.0" y2="416.0" stroke="#383835" stroke-width="1.0" stroke-linecap="round"/>
+<line x1="70.0" y1="236.6" x2="443.0" y2="236.6" stroke="#898781" stroke-width="1.0" stroke-linecap="round" stroke-dasharray="2 4"/>
+<text x="443.0" y="231.6" font-size="10" text-anchor="end" font-weight="400" fill="#898781">1-core peak 42</text>
+<line x1="70.0" y1="183.3" x2="443.0" y2="183.3" stroke="#898781" stroke-width="1.0" stroke-linecap="round" stroke-dasharray="2 4"/>
+<text x="443.0" y="178.3" font-size="10" text-anchor="end" font-weight="400" fill="#898781">6-core peak 250</text>
+<polyline points="70.0,326.6 106.4,328.6 132.2,333.6 168.5,336.5 194.3,349.8 230.7,343.6 256.5,351.0 292.9,348.4 318.7,351.6 355.0,369.1 380.8,384.4" fill="none" stroke="#d55181" stroke-width="2.0" stroke-linejoin="round" stroke-linecap="round"/>
+<circle cx="70.0" cy="326.6" r="3.5" fill="#d55181" stroke="#1a1a19" stroke-width="2"><title>naive ijk, f64, n=64: 2.02 GFLOP/s</title></circle>
+<circle cx="106.4" cy="328.6" r="3.5" fill="#d55181" stroke="#1a1a19" stroke-width="2"><title>naive ijk, f64, n=96: 1.89 GFLOP/s</title></circle>
+<circle cx="132.2" cy="333.6" r="3.5" fill="#d55181" stroke="#1a1a19" stroke-width="2"><title>naive ijk, f64, n=128: 1.60 GFLOP/s</title></circle>
+<circle cx="168.5" cy="336.5" r="3.5" fill="#d55181" stroke="#1a1a19" stroke-width="2"><title>naive ijk, f64, n=192: 1.45 GFLOP/s</title></circle>
+<circle cx="194.3" cy="349.8" r="3.5" fill="#d55181" stroke="#1a1a19" stroke-width="2"><title>naive ijk, f64, n=256: 0.93 GFLOP/s</title></circle>
+<circle cx="230.7" cy="343.6" r="3.5" fill="#d55181" stroke="#1a1a19" stroke-width="2"><title>naive ijk, f64, n=384: 1.14 GFLOP/s</title></circle>
+<circle cx="256.5" cy="351.0" r="3.5" fill="#d55181" stroke="#1a1a19" stroke-width="2"><title>naive ijk, f64, n=512: 0.89 GFLOP/s</title></circle>
+<circle cx="292.9" cy="348.4" r="3.5" fill="#d55181" stroke="#1a1a19" stroke-width="2"><title>naive ijk, f64, n=768: 0.97 GFLOP/s</title></circle>
+<circle cx="318.7" cy="351.6" r="3.5" fill="#d55181" stroke="#1a1a19" stroke-width="2"><title>naive ijk, f64, n=1024: 0.87 GFLOP/s</title></circle>
+<circle cx="355.0" cy="369.1" r="3.5" fill="#d55181" stroke="#1a1a19" stroke-width="2"><title>naive ijk, f64, n=1536: 0.48 GFLOP/s</title></circle>
+<circle cx="380.8" cy="384.4" r="3.5" fill="#d55181" stroke="#1a1a19" stroke-width="2"><title>naive ijk, f64, n=2048: 0.29 GFLOP/s</title></circle>
+<polyline points="70.0,300.5 106.4,299.8 132.2,300.7 168.5,305.0 194.3,307.2 230.7,305.4 256.5,310.0 292.9,306.9 318.7,311.4 355.0,317.3 380.8,314.9" fill="none" stroke="#c98500" stroke-width="2.0" stroke-linejoin="round" stroke-linecap="round"/>
+<circle cx="70.0" cy="300.5" r="3.5" fill="#c98500" stroke="#1a1a19" stroke-width="2"><title>ikj loop order, f64, n=64: 4.86 GFLOP/s</title></circle>
+<circle cx="106.4" cy="299.8" r="3.5" fill="#c98500" stroke="#1a1a19" stroke-width="2"><title>ikj loop order, f64, n=96: 4.97 GFLOP/s</title></circle>
+<circle cx="132.2" cy="300.7" r="3.5" fill="#c98500" stroke="#1a1a19" stroke-width="2"><title>ikj loop order, f64, n=128: 4.82 GFLOP/s</title></circle>
+<circle cx="168.5" cy="305.0" r="3.5" fill="#c98500" stroke="#1a1a19" stroke-width="2"><title>ikj loop order, f64, n=192: 4.17 GFLOP/s</title></circle>
+<circle cx="194.3" cy="307.2" r="3.5" fill="#c98500" stroke="#1a1a19" stroke-width="2"><title>ikj loop order, f64, n=256: 3.88 GFLOP/s</title></circle>
+<circle cx="230.7" cy="305.4" r="3.5" fill="#c98500" stroke="#1a1a19" stroke-width="2"><title>ikj loop order, f64, n=384: 4.11 GFLOP/s</title></circle>
+<circle cx="256.5" cy="310.0" r="3.5" fill="#c98500" stroke="#1a1a19" stroke-width="2"><title>ikj loop order, f64, n=512: 3.52 GFLOP/s</title></circle>
+<circle cx="292.9" cy="306.9" r="3.5" fill="#c98500" stroke="#1a1a19" stroke-width="2"><title>ikj loop order, f64, n=768: 3.91 GFLOP/s</title></circle>
+<circle cx="318.7" cy="311.4" r="3.5" fill="#c98500" stroke="#1a1a19" stroke-width="2"><title>ikj loop order, f64, n=1024: 3.36 GFLOP/s</title></circle>
+<circle cx="355.0" cy="317.3" r="3.5" fill="#c98500" stroke="#1a1a19" stroke-width="2"><title>ikj loop order, f64, n=1536: 2.76 GFLOP/s</title></circle>
+<circle cx="380.8" cy="314.9" r="3.5" fill="#c98500" stroke="#1a1a19" stroke-width="2"><title>ikj loop order, f64, n=2048: 3.00 GFLOP/s</title></circle>
+<polyline points="70.0,300.6 106.4,298.7 132.2,299.3 168.5,298.3 194.3,298.7 230.7,298.1 256.5,298.4 292.9,298.2 318.7,298.4 355.0,298.4 380.8,298.3 417.2,298.2 443.0,298.3" fill="none" stroke="#199e70" stroke-width="2.0" stroke-linejoin="round" stroke-linecap="round"/>
+<circle cx="70.0" cy="300.6" r="3.5" fill="#199e70" stroke="#1a1a19" stroke-width="2"><title>blocked + packed, portable kernel, f64, n=64: 4.83 GFLOP/s</title></circle>
+<circle cx="106.4" cy="298.7" r="3.5" fill="#199e70" stroke="#1a1a19" stroke-width="2"><title>blocked + packed, portable kernel, f64, n=96: 5.16 GFLOP/s</title></circle>
+<circle cx="132.2" cy="299.3" r="3.5" fill="#199e70" stroke="#1a1a19" stroke-width="2"><title>blocked + packed, portable kernel, f64, n=128: 5.05 GFLOP/s</title></circle>
+<circle cx="168.5" cy="298.3" r="3.5" fill="#199e70" stroke="#1a1a19" stroke-width="2"><title>blocked + packed, portable kernel, f64, n=192: 5.22 GFLOP/s</title></circle>
+<circle cx="194.3" cy="298.7" r="3.5" fill="#199e70" stroke="#1a1a19" stroke-width="2"><title>blocked + packed, portable kernel, f64, n=256: 5.16 GFLOP/s</title></circle>
+<circle cx="230.7" cy="298.1" r="3.5" fill="#199e70" stroke="#1a1a19" stroke-width="2"><title>blocked + packed, portable kernel, f64, n=384: 5.27 GFLOP/s</title></circle>
+<circle cx="256.5" cy="298.4" r="3.5" fill="#199e70" stroke="#1a1a19" stroke-width="2"><title>blocked + packed, portable kernel, f64, n=512: 5.21 GFLOP/s</title></circle>
+<circle cx="292.9" cy="298.2" r="3.5" fill="#199e70" stroke="#1a1a19" stroke-width="2"><title>blocked + packed, portable kernel, f64, n=768: 5.24 GFLOP/s</title></circle>
+<circle cx="318.7" cy="298.4" r="3.5" fill="#199e70" stroke="#1a1a19" stroke-width="2"><title>blocked + packed, portable kernel, f64, n=1024: 5.22 GFLOP/s</title></circle>
+<circle cx="355.0" cy="298.4" r="3.5" fill="#199e70" stroke="#1a1a19" stroke-width="2"><title>blocked + packed, portable kernel, f64, n=1536: 5.21 GFLOP/s</title></circle>
+<circle cx="380.8" cy="298.3" r="3.5" fill="#199e70" stroke="#1a1a19" stroke-width="2"><title>blocked + packed, portable kernel, f64, n=2048: 5.23 GFLOP/s</title></circle>
+<circle cx="417.2" cy="298.2" r="3.5" fill="#199e70" stroke="#1a1a19" stroke-width="2"><title>blocked + packed, portable kernel, f64, n=3072: 5.24 GFLOP/s</title></circle>
+<circle cx="443.0" cy="298.3" r="3.5" fill="#199e70" stroke="#1a1a19" stroke-width="2"><title>blocked + packed, portable kernel, f64, n=4096: 5.22 GFLOP/s</title></circle>
+<polyline points="70.0,252.8 106.4,248.2 132.2,247.9 168.5,244.7 194.3,244.7 230.7,242.9 256.5,243.0 292.9,242.2 318.7,242.5 355.0,242.2 380.8,242.9 417.2,243.2 443.0,243.6" fill="none" stroke="#3987e5" stroke-width="2.0" stroke-linejoin="round" stroke-linecap="round"/>
+<circle cx="70.0" cy="252.8" r="3.5" fill="#3987e5" stroke="#1a1a19" stroke-width="2"><title>blocked + AVX2/FMA, 1 thread, f64, n=64: 24.14 GFLOP/s</title></circle>
+<circle cx="106.4" cy="248.2" r="3.5" fill="#3987e5" stroke="#1a1a19" stroke-width="2"><title>blocked + AVX2/FMA, 1 thread, f64, n=96: 28.13 GFLOP/s</title></circle>
+<circle cx="132.2" cy="247.9" r="3.5" fill="#3987e5" stroke="#1a1a19" stroke-width="2"><title>blocked + AVX2/FMA, 1 thread, f64, n=128: 28.47 GFLOP/s</title></circle>
+<circle cx="168.5" cy="244.7" r="3.5" fill="#3987e5" stroke="#1a1a19" stroke-width="2"><title>blocked + AVX2/FMA, 1 thread, f64, n=192: 31.64 GFLOP/s</title></circle>
+<circle cx="194.3" cy="244.7" r="3.5" fill="#3987e5" stroke="#1a1a19" stroke-width="2"><title>blocked + AVX2/FMA, 1 thread, f64, n=256: 31.69 GFLOP/s</title></circle>
+<circle cx="230.7" cy="242.9" r="3.5" fill="#3987e5" stroke="#1a1a19" stroke-width="2"><title>blocked + AVX2/FMA, 1 thread, f64, n=384: 33.68 GFLOP/s</title></circle>
+<circle cx="256.5" cy="243.0" r="3.5" fill="#3987e5" stroke="#1a1a19" stroke-width="2"><title>blocked + AVX2/FMA, 1 thread, f64, n=512: 33.49 GFLOP/s</title></circle>
+<circle cx="292.9" cy="242.2" r="3.5" fill="#3987e5" stroke="#1a1a19" stroke-width="2"><title>blocked + AVX2/FMA, 1 thread, f64, n=768: 34.44 GFLOP/s</title></circle>
+<circle cx="318.7" cy="242.5" r="3.5" fill="#3987e5" stroke="#1a1a19" stroke-width="2"><title>blocked + AVX2/FMA, 1 thread, f64, n=1024: 34.11 GFLOP/s</title></circle>
+<circle cx="355.0" cy="242.2" r="3.5" fill="#3987e5" stroke="#1a1a19" stroke-width="2"><title>blocked + AVX2/FMA, 1 thread, f64, n=1536: 34.41 GFLOP/s</title></circle>
+<circle cx="380.8" cy="242.9" r="3.5" fill="#3987e5" stroke="#1a1a19" stroke-width="2"><title>blocked + AVX2/FMA, 1 thread, f64, n=2048: 33.67 GFLOP/s</title></circle>
+<circle cx="417.2" cy="243.2" r="3.5" fill="#3987e5" stroke="#1a1a19" stroke-width="2"><title>blocked + AVX2/FMA, 1 thread, f64, n=3072: 33.33 GFLOP/s</title></circle>
+<circle cx="443.0" cy="243.6" r="3.5" fill="#3987e5" stroke="#1a1a19" stroke-width="2"><title>blocked + AVX2/FMA, 1 thread, f64, n=4096: 32.83 GFLOP/s</title></circle>
+<polyline points="70.0,268.7 106.4,247.0 132.2,228.8 168.5,211.2 194.3,204.3 230.7,197.9 256.5,197.9 292.9,194.9 318.7,194.2 355.0,193.5 380.8,194.3 417.2,195.1 443.0,194.5" fill="none" stroke="#d95926" stroke-width="2.0" stroke-linejoin="round" stroke-linecap="round"/>
+<circle cx="70.0" cy="268.7" r="3.5" fill="#d95926" stroke="#1a1a19" stroke-width="2"><title>blocked + AVX2/FMA, 6 threads, f64, n=64: 14.16 GFLOP/s</title></circle>
+<circle cx="106.4" cy="247.0" r="3.5" fill="#d95926" stroke="#1a1a19" stroke-width="2"><title>blocked + AVX2/FMA, 6 threads, f64, n=96: 29.28 GFLOP/s</title></circle>
+<circle cx="132.2" cy="228.8" r="3.5" fill="#d95926" stroke="#1a1a19" stroke-width="2"><title>blocked + AVX2/FMA, 6 threads, f64, n=128: 53.99 GFLOP/s</title></circle>
+<circle cx="168.5" cy="211.2" r="3.5" fill="#d95926" stroke="#1a1a19" stroke-width="2"><title>blocked + AVX2/FMA, 6 threads, f64, n=192: 97.55 GFLOP/s</title></circle>
+<circle cx="194.3" cy="204.3" r="3.5" fill="#d95926" stroke="#1a1a19" stroke-width="2"><title>blocked + AVX2/FMA, 6 threads, f64, n=256: 123.25 GFLOP/s</title></circle>
+<circle cx="230.7" cy="197.9" r="3.5" fill="#d95926" stroke="#1a1a19" stroke-width="2"><title>blocked + AVX2/FMA, 6 threads, f64, n=384: 152.85 GFLOP/s</title></circle>
+<circle cx="256.5" cy="197.9" r="3.5" fill="#d95926" stroke="#1a1a19" stroke-width="2"><title>blocked + AVX2/FMA, 6 threads, f64, n=512: 152.53 GFLOP/s</title></circle>
+<circle cx="292.9" cy="194.9" r="3.5" fill="#d95926" stroke="#1a1a19" stroke-width="2"><title>blocked + AVX2/FMA, 6 threads, f64, n=768: 169.03 GFLOP/s</title></circle>
+<circle cx="318.7" cy="194.2" r="3.5" fill="#d95926" stroke="#1a1a19" stroke-width="2"><title>blocked + AVX2/FMA, 6 threads, f64, n=1024: 172.99 GFLOP/s</title></circle>
+<circle cx="355.0" cy="193.5" r="3.5" fill="#d95926" stroke="#1a1a19" stroke-width="2"><title>blocked + AVX2/FMA, 6 threads, f64, n=1536: 177.19 GFLOP/s</title></circle>
+<circle cx="380.8" cy="194.3" r="3.5" fill="#d95926" stroke="#1a1a19" stroke-width="2"><title>blocked + AVX2/FMA, 6 threads, f64, n=2048: 172.10 GFLOP/s</title></circle>
+<circle cx="417.2" cy="195.1" r="3.5" fill="#d95926" stroke="#1a1a19" stroke-width="2"><title>blocked + AVX2/FMA, 6 threads, f64, n=3072: 167.66 GFLOP/s</title></circle>
+<circle cx="443.0" cy="194.5" r="3.5" fill="#d95926" stroke="#1a1a19" stroke-width="2"><title>blocked + AVX2/FMA, 6 threads, f64, n=4096: 171.02 GFLOP/s</title></circle>
+<polyline points="70.0,250.7 106.4,246.7 132.2,245.6 168.5,243.6 194.3,242.7 230.7,241.5 256.5,241.7 292.9,241.1 318.7,241.3 355.0,241.4 380.8,241.2 417.2,241.1 443.0,241.2" fill="none" stroke="#3987e5" stroke-width="2.0" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="5 4"/>
+<circle cx="70.0" cy="250.7" r="3.5" fill="#1a1a19" stroke="#3987e5" stroke-width="2"><title>OpenBLAS 0.3.32, 1 thread, f64, n=64: 25.92 GFLOP/s</title></circle>
+<circle cx="106.4" cy="246.7" r="3.5" fill="#1a1a19" stroke="#3987e5" stroke-width="2"><title>OpenBLAS 0.3.32, 1 thread, f64, n=96: 29.64 GFLOP/s</title></circle>
+<circle cx="132.2" cy="245.6" r="3.5" fill="#1a1a19" stroke="#3987e5" stroke-width="2"><title>OpenBLAS 0.3.32, 1 thread, f64, n=128: 30.74 GFLOP/s</title></circle>
+<circle cx="168.5" cy="243.6" r="3.5" fill="#1a1a19" stroke="#3987e5" stroke-width="2"><title>OpenBLAS 0.3.32, 1 thread, f64, n=192: 32.84 GFLOP/s</title></circle>
+<circle cx="194.3" cy="242.7" r="3.5" fill="#1a1a19" stroke="#3987e5" stroke-width="2"><title>OpenBLAS 0.3.32, 1 thread, f64, n=256: 33.87 GFLOP/s</title></circle>
+<circle cx="230.7" cy="241.5" r="3.5" fill="#1a1a19" stroke="#3987e5" stroke-width="2"><title>OpenBLAS 0.3.32, 1 thread, f64, n=384: 35.22 GFLOP/s</title></circle>
+<circle cx="256.5" cy="241.7" r="3.5" fill="#1a1a19" stroke="#3987e5" stroke-width="2"><title>OpenBLAS 0.3.32, 1 thread, f64, n=512: 35.06 GFLOP/s</title></circle>
+<circle cx="292.9" cy="241.1" r="3.5" fill="#1a1a19" stroke="#3987e5" stroke-width="2"><title>OpenBLAS 0.3.32, 1 thread, f64, n=768: 35.75 GFLOP/s</title></circle>
+<circle cx="318.7" cy="241.3" r="3.5" fill="#1a1a19" stroke="#3987e5" stroke-width="2"><title>OpenBLAS 0.3.32, 1 thread, f64, n=1024: 35.52 GFLOP/s</title></circle>
+<circle cx="355.0" cy="241.4" r="3.5" fill="#1a1a19" stroke="#3987e5" stroke-width="2"><title>OpenBLAS 0.3.32, 1 thread, f64, n=1536: 35.45 GFLOP/s</title></circle>
+<circle cx="380.8" cy="241.2" r="3.5" fill="#1a1a19" stroke="#3987e5" stroke-width="2"><title>OpenBLAS 0.3.32, 1 thread, f64, n=2048: 35.64 GFLOP/s</title></circle>
+<circle cx="417.2" cy="241.1" r="3.5" fill="#1a1a19" stroke="#3987e5" stroke-width="2"><title>OpenBLAS 0.3.32, 1 thread, f64, n=3072: 35.78 GFLOP/s</title></circle>
+<circle cx="443.0" cy="241.2" r="3.5" fill="#1a1a19" stroke="#3987e5" stroke-width="2"><title>OpenBLAS 0.3.32, 1 thread, f64, n=4096: 35.68 GFLOP/s</title></circle>
+<polyline points="70.0,250.7 106.4,226.2 132.2,210.7 168.5,199.0 194.3,198.4 230.7,192.6 256.5,194.4 292.9,190.9 318.7,192.2 355.0,191.4 380.8,190.6 417.2,191.7 443.0,190.0" fill="none" stroke="#d95926" stroke-width="2.0" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="5 4"/>
+<circle cx="70.0" cy="250.7" r="3.5" fill="#1a1a19" stroke="#d95926" stroke-width="2"><title>OpenBLAS 0.3.32, 6 threads, f64, n=64: 25.92 GFLOP/s</title></circle>
+<circle cx="106.4" cy="226.2" r="3.5" fill="#1a1a19" stroke="#d95926" stroke-width="2"><title>OpenBLAS 0.3.32, 6 threads, f64, n=96: 59.02 GFLOP/s</title></circle>
+<circle cx="132.2" cy="210.7" r="3.5" fill="#1a1a19" stroke="#d95926" stroke-width="2"><title>OpenBLAS 0.3.32, 6 threads, f64, n=128: 99.44 GFLOP/s</title></circle>
+<circle cx="168.5" cy="199.0" r="3.5" fill="#1a1a19" stroke="#d95926" stroke-width="2"><title>OpenBLAS 0.3.32, 6 threads, f64, n=192: 147.39 GFLOP/s</title></circle>
+<circle cx="194.3" cy="198.4" r="3.5" fill="#1a1a19" stroke="#d95926" stroke-width="2"><title>OpenBLAS 0.3.32, 6 threads, f64, n=256: 150.32 GFLOP/s</title></circle>
+<circle cx="230.7" cy="192.6" r="3.5" fill="#1a1a19" stroke="#d95926" stroke-width="2"><title>OpenBLAS 0.3.32, 6 threads, f64, n=384: 182.78 GFLOP/s</title></circle>
+<circle cx="256.5" cy="194.4" r="3.5" fill="#1a1a19" stroke="#d95926" stroke-width="2"><title>OpenBLAS 0.3.32, 6 threads, f64, n=512: 171.90 GFLOP/s</title></circle>
+<circle cx="292.9" cy="190.9" r="3.5" fill="#1a1a19" stroke="#d95926" stroke-width="2"><title>OpenBLAS 0.3.32, 6 threads, f64, n=768: 193.55 GFLOP/s</title></circle>
+<circle cx="318.7" cy="192.2" r="3.5" fill="#1a1a19" stroke="#d95926" stroke-width="2"><title>OpenBLAS 0.3.32, 6 threads, f64, n=1024: 184.91 GFLOP/s</title></circle>
+<circle cx="355.0" cy="191.4" r="3.5" fill="#1a1a19" stroke="#d95926" stroke-width="2"><title>OpenBLAS 0.3.32, 6 threads, f64, n=1536: 190.15 GFLOP/s</title></circle>
+<circle cx="380.8" cy="190.6" r="3.5" fill="#1a1a19" stroke="#d95926" stroke-width="2"><title>OpenBLAS 0.3.32, 6 threads, f64, n=2048: 195.41 GFLOP/s</title></circle>
+<circle cx="417.2" cy="191.7" r="3.5" fill="#1a1a19" stroke="#d95926" stroke-width="2"><title>OpenBLAS 0.3.32, 6 threads, f64, n=3072: 188.19 GFLOP/s</title></circle>
+<circle cx="443.0" cy="190.0" r="3.5" fill="#1a1a19" stroke="#d95926" stroke-width="2"><title>OpenBLAS 0.3.32, 6 threads, f64, n=4096: 199.44 GFLOP/s</title></circle>
+<text x="469.0" y="126.0" font-size="13" text-anchor="start" font-weight="600" fill="#f0efec">float</text>
+<line x1="515.0" y1="416.0" x2="888.0" y2="416.0" stroke="#2c2c2a" stroke-width="1.0" stroke-linecap="round"/>
+<text x="507.0" y="420.0" font-size="11" text-anchor="end" font-weight="400" fill="#898781">0.1</text>
+<line x1="515.0" y1="347.5" x2="888.0" y2="347.5" stroke="#2c2c2a" stroke-width="1.0" stroke-linecap="round"/>
+<text x="507.0" y="351.5" font-size="11" text-anchor="end" font-weight="400" fill="#898781">1</text>
+<line x1="515.0" y1="279.0" x2="888.0" y2="279.0" stroke="#2c2c2a" stroke-width="1.0" stroke-linecap="round"/>
+<text x="507.0" y="283.0" font-size="11" text-anchor="end" font-weight="400" fill="#898781">10</text>
+<line x1="515.0" y1="210.5" x2="888.0" y2="210.5" stroke="#2c2c2a" stroke-width="1.0" stroke-linecap="round"/>
+<text x="507.0" y="214.5" font-size="11" text-anchor="end" font-weight="400" fill="#898781">100</text>
+<line x1="515.0" y1="142.0" x2="888.0" y2="142.0" stroke="#2c2c2a" stroke-width="1.0" stroke-linecap="round"/>
+<text x="507.0" y="146.0" font-size="11" text-anchor="end" font-weight="400" fill="#898781">1,000</text>
+<text x="515.0" y="434.0" font-size="11" text-anchor="middle" font-weight="400" fill="#898781">64</text>
+<text x="577.2" y="434.0" font-size="11" text-anchor="middle" font-weight="400" fill="#898781">128</text>
+<text x="639.3" y="434.0" font-size="11" text-anchor="middle" font-weight="400" fill="#898781">256</text>
+<text x="701.5" y="434.0" font-size="11" text-anchor="middle" font-weight="400" fill="#898781">512</text>
+<text x="763.7" y="434.0" font-size="11" text-anchor="middle" font-weight="400" fill="#898781">1024</text>
+<text x="825.8" y="434.0" font-size="11" text-anchor="middle" font-weight="400" fill="#898781">2048</text>
+<text x="888.0" y="434.0" font-size="11" text-anchor="middle" font-weight="400" fill="#898781">4096</text>
+<line x1="515.0" y1="416.0" x2="888.0" y2="416.0" stroke="#383835" stroke-width="1.0" stroke-linecap="round"/>
+<line x1="515.0" y1="216.0" x2="888.0" y2="216.0" stroke="#898781" stroke-width="1.0" stroke-linecap="round" stroke-dasharray="2 4"/>
+<text x="888.0" y="211.0" font-size="10" text-anchor="end" font-weight="400" fill="#898781">1-core peak 83</text>
+<line x1="515.0" y1="162.7" x2="888.0" y2="162.7" stroke="#898781" stroke-width="1.0" stroke-linecap="round" stroke-dasharray="2 4"/>
+<text x="888.0" y="157.7" font-size="10" text-anchor="end" font-weight="400" fill="#898781">6-core peak 499</text>
+<polyline points="515.0,327.1 551.4,329.6 577.2,333.6 613.5,336.1 639.3,338.6 675.7,339.3 701.5,351.6 737.9,347.5 763.7,350.8 800.0,360.2 825.8,380.4" fill="none" stroke="#d55181" stroke-width="2.0" stroke-linejoin="round" stroke-linecap="round"/>
+<circle cx="515.0" cy="327.1" r="3.5" fill="#d55181" stroke="#1a1a19" stroke-width="2"><title>naive ijk, f32, n=64: 1.99 GFLOP/s</title></circle>
+<circle cx="551.4" cy="329.6" r="3.5" fill="#d55181" stroke="#1a1a19" stroke-width="2"><title>naive ijk, f32, n=96: 1.83 GFLOP/s</title></circle>
+<circle cx="577.2" cy="333.6" r="3.5" fill="#d55181" stroke="#1a1a19" stroke-width="2"><title>naive ijk, f32, n=128: 1.60 GFLOP/s</title></circle>
+<circle cx="613.5" cy="336.1" r="3.5" fill="#d55181" stroke="#1a1a19" stroke-width="2"><title>naive ijk, f32, n=192: 1.47 GFLOP/s</title></circle>
+<circle cx="639.3" cy="338.6" r="3.5" fill="#d55181" stroke="#1a1a19" stroke-width="2"><title>naive ijk, f32, n=256: 1.35 GFLOP/s</title></circle>
+<circle cx="675.7" cy="339.3" r="3.5" fill="#d55181" stroke="#1a1a19" stroke-width="2"><title>naive ijk, f32, n=384: 1.32 GFLOP/s</title></circle>
+<circle cx="701.5" cy="351.6" r="3.5" fill="#d55181" stroke="#1a1a19" stroke-width="2"><title>naive ijk, f32, n=512: 0.87 GFLOP/s</title></circle>
+<circle cx="737.9" cy="347.5" r="3.5" fill="#d55181" stroke="#1a1a19" stroke-width="2"><title>naive ijk, f32, n=768: 1.00 GFLOP/s</title></circle>
+<circle cx="763.7" cy="350.8" r="3.5" fill="#d55181" stroke="#1a1a19" stroke-width="2"><title>naive ijk, f32, n=1024: 0.89 GFLOP/s</title></circle>
+<circle cx="800.0" cy="360.2" r="3.5" fill="#d55181" stroke="#1a1a19" stroke-width="2"><title>naive ijk, f32, n=1536: 0.65 GFLOP/s</title></circle>
+<circle cx="825.8" cy="380.4" r="3.5" fill="#d55181" stroke="#1a1a19" stroke-width="2"><title>naive ijk, f32, n=2048: 0.33 GFLOP/s</title></circle>
+<polyline points="515.0,280.7 551.4,279.9 577.2,280.1 613.5,280.1 639.3,281.7 675.7,284.5 701.5,286.6 737.9,284.9 763.7,289.6 800.0,289.0 825.8,295.9" fill="none" stroke="#c98500" stroke-width="2.0" stroke-linejoin="round" stroke-linecap="round"/>
+<circle cx="515.0" cy="280.7" r="3.5" fill="#c98500" stroke="#1a1a19" stroke-width="2"><title>ikj loop order, f32, n=64: 9.45 GFLOP/s</title></circle>
+<circle cx="551.4" cy="279.9" r="3.5" fill="#c98500" stroke="#1a1a19" stroke-width="2"><title>ikj loop order, f32, n=96: 9.70 GFLOP/s</title></circle>
+<circle cx="577.2" cy="280.1" r="3.5" fill="#c98500" stroke="#1a1a19" stroke-width="2"><title>ikj loop order, f32, n=128: 9.65 GFLOP/s</title></circle>
+<circle cx="613.5" cy="280.1" r="3.5" fill="#c98500" stroke="#1a1a19" stroke-width="2"><title>ikj loop order, f32, n=192: 9.64 GFLOP/s</title></circle>
+<circle cx="639.3" cy="281.7" r="3.5" fill="#c98500" stroke="#1a1a19" stroke-width="2"><title>ikj loop order, f32, n=256: 9.12 GFLOP/s</title></circle>
+<circle cx="675.7" cy="284.5" r="3.5" fill="#c98500" stroke="#1a1a19" stroke-width="2"><title>ikj loop order, f32, n=384: 8.30 GFLOP/s</title></circle>
+<circle cx="701.5" cy="286.6" r="3.5" fill="#c98500" stroke="#1a1a19" stroke-width="2"><title>ikj loop order, f32, n=512: 7.75 GFLOP/s</title></circle>
+<circle cx="737.9" cy="284.9" r="3.5" fill="#c98500" stroke="#1a1a19" stroke-width="2"><title>ikj loop order, f32, n=768: 8.20 GFLOP/s</title></circle>
+<circle cx="763.7" cy="289.6" r="3.5" fill="#c98500" stroke="#1a1a19" stroke-width="2"><title>ikj loop order, f32, n=1024: 7.01 GFLOP/s</title></circle>
+<circle cx="800.0" cy="289.0" r="3.5" fill="#c98500" stroke="#1a1a19" stroke-width="2"><title>ikj loop order, f32, n=1536: 7.15 GFLOP/s</title></circle>
+<circle cx="825.8" cy="295.9" r="3.5" fill="#c98500" stroke="#1a1a19" stroke-width="2"><title>ikj loop order, f32, n=2048: 5.66 GFLOP/s</title></circle>
+<polyline points="515.0,305.1 551.4,303.9 577.2,304.7 613.5,303.6 639.3,303.8 675.7,303.5 701.5,303.7 737.9,303.4 763.7,303.5 800.0,303.5 825.8,303.5 862.2,303.4 888.0,303.5" fill="none" stroke="#199e70" stroke-width="2.0" stroke-linejoin="round" stroke-linecap="round"/>
+<circle cx="515.0" cy="305.1" r="3.5" fill="#199e70" stroke="#1a1a19" stroke-width="2"><title>blocked + packed, portable kernel, f32, n=64: 4.16 GFLOP/s</title></circle>
+<circle cx="551.4" cy="303.9" r="3.5" fill="#199e70" stroke="#1a1a19" stroke-width="2"><title>blocked + packed, portable kernel, f32, n=96: 4.34 GFLOP/s</title></circle>
+<circle cx="577.2" cy="304.7" r="3.5" fill="#199e70" stroke="#1a1a19" stroke-width="2"><title>blocked + packed, portable kernel, f32, n=128: 4.22 GFLOP/s</title></circle>
+<circle cx="613.5" cy="303.6" r="3.5" fill="#199e70" stroke="#1a1a19" stroke-width="2"><title>blocked + packed, portable kernel, f32, n=192: 4.38 GFLOP/s</title></circle>
+<circle cx="639.3" cy="303.8" r="3.5" fill="#199e70" stroke="#1a1a19" stroke-width="2"><title>blocked + packed, portable kernel, f32, n=256: 4.35 GFLOP/s</title></circle>
+<circle cx="675.7" cy="303.5" r="3.5" fill="#199e70" stroke="#1a1a19" stroke-width="2"><title>blocked + packed, portable kernel, f32, n=384: 4.39 GFLOP/s</title></circle>
+<circle cx="701.5" cy="303.7" r="3.5" fill="#199e70" stroke="#1a1a19" stroke-width="2"><title>blocked + packed, portable kernel, f32, n=512: 4.36 GFLOP/s</title></circle>
+<circle cx="737.9" cy="303.4" r="3.5" fill="#199e70" stroke="#1a1a19" stroke-width="2"><title>blocked + packed, portable kernel, f32, n=768: 4.40 GFLOP/s</title></circle>
+<circle cx="763.7" cy="303.5" r="3.5" fill="#199e70" stroke="#1a1a19" stroke-width="2"><title>blocked + packed, portable kernel, f32, n=1024: 4.39 GFLOP/s</title></circle>
+<circle cx="800.0" cy="303.5" r="3.5" fill="#199e70" stroke="#1a1a19" stroke-width="2"><title>blocked + packed, portable kernel, f32, n=1536: 4.39 GFLOP/s</title></circle>
+<circle cx="825.8" cy="303.5" r="3.5" fill="#199e70" stroke="#1a1a19" stroke-width="2"><title>blocked + packed, portable kernel, f32, n=2048: 4.38 GFLOP/s</title></circle>
+<circle cx="862.2" cy="303.4" r="3.5" fill="#199e70" stroke="#1a1a19" stroke-width="2"><title>blocked + packed, portable kernel, f32, n=3072: 4.40 GFLOP/s</title></circle>
+<circle cx="888.0" cy="303.5" r="3.5" fill="#199e70" stroke="#1a1a19" stroke-width="2"><title>blocked + packed, portable kernel, f32, n=4096: 4.39 GFLOP/s</title></circle>
+<polyline points="515.0,234.6 551.4,229.5 577.2,228.2 613.5,225.0 639.3,224.1 675.7,222.6 701.5,222.3 737.9,221.4 763.7,221.7 800.0,221.3 825.8,222.1 862.2,221.7 888.0,221.9" fill="none" stroke="#3987e5" stroke-width="2.0" stroke-linejoin="round" stroke-linecap="round"/>
+<circle cx="515.0" cy="234.6" r="3.5" fill="#3987e5" stroke="#1a1a19" stroke-width="2"><title>blocked + AVX2/FMA, 1 thread, f32, n=64: 44.44 GFLOP/s</title></circle>
+<circle cx="551.4" cy="229.5" r="3.5" fill="#3987e5" stroke="#1a1a19" stroke-width="2"><title>blocked + AVX2/FMA, 1 thread, f32, n=96: 52.86 GFLOP/s</title></circle>
+<circle cx="577.2" cy="228.2" r="3.5" fill="#3987e5" stroke="#1a1a19" stroke-width="2"><title>blocked + AVX2/FMA, 1 thread, f32, n=128: 55.14 GFLOP/s</title></circle>
+<circle cx="613.5" cy="225.0" r="3.5" fill="#3987e5" stroke="#1a1a19" stroke-width="2"><title>blocked + AVX2/FMA, 1 thread, f32, n=192: 61.46 GFLOP/s</title></circle>
+<circle cx="639.3" cy="224.1" r="3.5" fill="#3987e5" stroke="#1a1a19" stroke-width="2"><title>blocked + AVX2/FMA, 1 thread, f32, n=256: 63.39 GFLOP/s</title></circle>
+<circle cx="675.7" cy="222.6" r="3.5" fill="#3987e5" stroke="#1a1a19" stroke-width="2"><title>blocked + AVX2/FMA, 1 thread, f32, n=384: 66.62 GFLOP/s</title></circle>
+<circle cx="701.5" cy="222.3" r="3.5" fill="#3987e5" stroke="#1a1a19" stroke-width="2"><title>blocked + AVX2/FMA, 1 thread, f32, n=512: 67.33 GFLOP/s</title></circle>
+<circle cx="737.9" cy="221.4" r="3.5" fill="#3987e5" stroke="#1a1a19" stroke-width="2"><title>blocked + AVX2/FMA, 1 thread, f32, n=768: 69.31 GFLOP/s</title></circle>
+<circle cx="763.7" cy="221.7" r="3.5" fill="#3987e5" stroke="#1a1a19" stroke-width="2"><title>blocked + AVX2/FMA, 1 thread, f32, n=1024: 68.56 GFLOP/s</title></circle>
+<circle cx="800.0" cy="221.3" r="3.5" fill="#3987e5" stroke="#1a1a19" stroke-width="2"><title>blocked + AVX2/FMA, 1 thread, f32, n=1536: 69.55 GFLOP/s</title></circle>
+<circle cx="825.8" cy="222.1" r="3.5" fill="#3987e5" stroke="#1a1a19" stroke-width="2"><title>blocked + AVX2/FMA, 1 thread, f32, n=2048: 67.76 GFLOP/s</title></circle>
+<circle cx="862.2" cy="221.7" r="3.5" fill="#3987e5" stroke="#1a1a19" stroke-width="2"><title>blocked + AVX2/FMA, 1 thread, f32, n=3072: 68.73 GFLOP/s</title></circle>
+<circle cx="888.0" cy="221.9" r="3.5" fill="#3987e5" stroke="#1a1a19" stroke-width="2"><title>blocked + AVX2/FMA, 1 thread, f32, n=4096: 68.12 GFLOP/s</title></circle>
+<polyline points="515.0,259.1 551.4,235.5 577.2,226.0 613.5,208.7 639.3,194.4 675.7,184.8 701.5,179.1 737.9,176.5 763.7,176.2 800.0,173.3 825.8,172.6 862.2,171.7 888.0,172.6" fill="none" stroke="#d95926" stroke-width="2.0" stroke-linejoin="round" stroke-linecap="round"/>
+<circle cx="515.0" cy="259.1" r="3.5" fill="#d95926" stroke="#1a1a19" stroke-width="2"><title>blocked + AVX2/FMA, 6 threads, f32, n=64: 19.49 GFLOP/s</title></circle>
+<circle cx="551.4" cy="235.5" r="3.5" fill="#d95926" stroke="#1a1a19" stroke-width="2"><title>blocked + AVX2/FMA, 6 threads, f32, n=96: 43.09 GFLOP/s</title></circle>
+<circle cx="577.2" cy="226.0" r="3.5" fill="#d95926" stroke="#1a1a19" stroke-width="2"><title>blocked + AVX2/FMA, 6 threads, f32, n=128: 59.45 GFLOP/s</title></circle>
+<circle cx="613.5" cy="208.7" r="3.5" fill="#d95926" stroke="#1a1a19" stroke-width="2"><title>blocked + AVX2/FMA, 6 threads, f32, n=192: 106.38 GFLOP/s</title></circle>
+<circle cx="639.3" cy="194.4" r="3.5" fill="#d95926" stroke="#1a1a19" stroke-width="2"><title>blocked + AVX2/FMA, 6 threads, f32, n=256: 171.63 GFLOP/s</title></circle>
+<circle cx="675.7" cy="184.8" r="3.5" fill="#d95926" stroke="#1a1a19" stroke-width="2"><title>blocked + AVX2/FMA, 6 threads, f32, n=384: 237.60 GFLOP/s</title></circle>
+<circle cx="701.5" cy="179.1" r="3.5" fill="#d95926" stroke="#1a1a19" stroke-width="2"><title>blocked + AVX2/FMA, 6 threads, f32, n=512: 287.41 GFLOP/s</title></circle>
+<circle cx="737.9" cy="176.5" r="3.5" fill="#d95926" stroke="#1a1a19" stroke-width="2"><title>blocked + AVX2/FMA, 6 threads, f32, n=768: 313.39 GFLOP/s</title></circle>
+<circle cx="763.7" cy="176.2" r="3.5" fill="#d95926" stroke="#1a1a19" stroke-width="2"><title>blocked + AVX2/FMA, 6 threads, f32, n=1024: 316.76 GFLOP/s</title></circle>
+<circle cx="800.0" cy="173.3" r="3.5" fill="#d95926" stroke="#1a1a19" stroke-width="2"><title>blocked + AVX2/FMA, 6 threads, f32, n=1536: 349.46 GFLOP/s</title></circle>
+<circle cx="825.8" cy="172.6" r="3.5" fill="#d95926" stroke="#1a1a19" stroke-width="2"><title>blocked + AVX2/FMA, 6 threads, f32, n=2048: 356.97 GFLOP/s</title></circle>
+<circle cx="862.2" cy="171.7" r="3.5" fill="#d95926" stroke="#1a1a19" stroke-width="2"><title>blocked + AVX2/FMA, 6 threads, f32, n=3072: 369.00 GFLOP/s</title></circle>
+<circle cx="888.0" cy="172.6" r="3.5" fill="#d95926" stroke="#1a1a19" stroke-width="2"><title>blocked + AVX2/FMA, 6 threads, f32, n=4096: 357.93 GFLOP/s</title></circle>
+<polyline points="515.0,227.8 551.4,224.2 577.2,223.7 613.5,221.4 639.3,221.1 675.7,220.1 701.5,219.9 737.9,219.3 763.7,219.5 800.0,219.2 825.8,219.2 862.2,219.1 888.0,219.0" fill="none" stroke="#3987e5" stroke-width="2.0" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="5 4"/>
+<circle cx="515.0" cy="227.8" r="3.5" fill="#1a1a19" stroke="#3987e5" stroke-width="2"><title>OpenBLAS 0.3.32, 1 thread, f32, n=64: 55.92 GFLOP/s</title></circle>
+<circle cx="551.4" cy="224.2" r="3.5" fill="#1a1a19" stroke="#3987e5" stroke-width="2"><title>OpenBLAS 0.3.32, 1 thread, f32, n=96: 63.19 GFLOP/s</title></circle>
+<circle cx="577.2" cy="223.7" r="3.5" fill="#1a1a19" stroke="#3987e5" stroke-width="2"><title>OpenBLAS 0.3.32, 1 thread, f32, n=128: 64.18 GFLOP/s</title></circle>
+<circle cx="613.5" cy="221.4" r="3.5" fill="#1a1a19" stroke="#3987e5" stroke-width="2"><title>OpenBLAS 0.3.32, 1 thread, f32, n=192: 69.25 GFLOP/s</title></circle>
+<circle cx="639.3" cy="221.1" r="3.5" fill="#1a1a19" stroke="#3987e5" stroke-width="2"><title>OpenBLAS 0.3.32, 1 thread, f32, n=256: 69.98 GFLOP/s</title></circle>
+<circle cx="675.7" cy="220.1" r="3.5" fill="#1a1a19" stroke="#3987e5" stroke-width="2"><title>OpenBLAS 0.3.32, 1 thread, f32, n=384: 72.51 GFLOP/s</title></circle>
+<circle cx="701.5" cy="219.9" r="3.5" fill="#1a1a19" stroke="#3987e5" stroke-width="2"><title>OpenBLAS 0.3.32, 1 thread, f32, n=512: 72.83 GFLOP/s</title></circle>
+<circle cx="737.9" cy="219.3" r="3.5" fill="#1a1a19" stroke="#3987e5" stroke-width="2"><title>OpenBLAS 0.3.32, 1 thread, f32, n=768: 74.39 GFLOP/s</title></circle>
+<circle cx="763.7" cy="219.5" r="3.5" fill="#1a1a19" stroke="#3987e5" stroke-width="2"><title>OpenBLAS 0.3.32, 1 thread, f32, n=1024: 73.90 GFLOP/s</title></circle>
+<circle cx="800.0" cy="219.2" r="3.5" fill="#1a1a19" stroke="#3987e5" stroke-width="2"><title>OpenBLAS 0.3.32, 1 thread, f32, n=1536: 74.70 GFLOP/s</title></circle>
+<circle cx="825.8" cy="219.2" r="3.5" fill="#1a1a19" stroke="#3987e5" stroke-width="2"><title>OpenBLAS 0.3.32, 1 thread, f32, n=2048: 74.72 GFLOP/s</title></circle>
+<circle cx="862.2" cy="219.1" r="3.5" fill="#1a1a19" stroke="#3987e5" stroke-width="2"><title>OpenBLAS 0.3.32, 1 thread, f32, n=3072: 74.78 GFLOP/s</title></circle>
+<circle cx="888.0" cy="219.0" r="3.5" fill="#1a1a19" stroke="#3987e5" stroke-width="2"><title>OpenBLAS 0.3.32, 1 thread, f32, n=4096: 75.06 GFLOP/s</title></circle>
+<polyline points="515.0,228.4 551.4,210.5 577.2,192.4 613.5,179.2 639.3,175.7 675.7,171.2 701.5,170.4 737.9,168.1 763.7,167.8 800.0,168.0 825.8,168.6 862.2,167.4 888.0,167.2" fill="none" stroke="#d95926" stroke-width="2.0" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="5 4"/>
+<circle cx="515.0" cy="228.4" r="3.5" fill="#1a1a19" stroke="#d95926" stroke-width="2"><title>OpenBLAS 0.3.32, 6 threads, f32, n=64: 54.86 GFLOP/s</title></circle>
+<circle cx="551.4" cy="210.5" r="3.5" fill="#1a1a19" stroke="#d95926" stroke-width="2"><title>OpenBLAS 0.3.32, 6 threads, f32, n=96: 99.99 GFLOP/s</title></circle>
+<circle cx="577.2" cy="192.4" r="3.5" fill="#1a1a19" stroke="#d95926" stroke-width="2"><title>OpenBLAS 0.3.32, 6 threads, f32, n=128: 183.97 GFLOP/s</title></circle>
+<circle cx="613.5" cy="179.2" r="3.5" fill="#1a1a19" stroke="#d95926" stroke-width="2"><title>OpenBLAS 0.3.32, 6 threads, f32, n=192: 286.05 GFLOP/s</title></circle>
+<circle cx="639.3" cy="175.7" r="3.5" fill="#1a1a19" stroke="#d95926" stroke-width="2"><title>OpenBLAS 0.3.32, 6 threads, f32, n=256: 322.26 GFLOP/s</title></circle>
+<circle cx="675.7" cy="171.2" r="3.5" fill="#1a1a19" stroke="#d95926" stroke-width="2"><title>OpenBLAS 0.3.32, 6 threads, f32, n=384: 374.56 GFLOP/s</title></circle>
+<circle cx="701.5" cy="170.4" r="3.5" fill="#1a1a19" stroke="#d95926" stroke-width="2"><title>OpenBLAS 0.3.32, 6 threads, f32, n=512: 384.33 GFLOP/s</title></circle>
+<circle cx="737.9" cy="168.1" r="3.5" fill="#1a1a19" stroke="#d95926" stroke-width="2"><title>OpenBLAS 0.3.32, 6 threads, f32, n=768: 416.24 GFLOP/s</title></circle>
+<circle cx="763.7" cy="167.8" r="3.5" fill="#1a1a19" stroke="#d95926" stroke-width="2"><title>OpenBLAS 0.3.32, 6 threads, f32, n=1024: 419.63 GFLOP/s</title></circle>
+<circle cx="800.0" cy="168.0" r="3.5" fill="#1a1a19" stroke="#d95926" stroke-width="2"><title>OpenBLAS 0.3.32, 6 threads, f32, n=1536: 417.67 GFLOP/s</title></circle>
+<circle cx="825.8" cy="168.6" r="3.5" fill="#1a1a19" stroke="#d95926" stroke-width="2"><title>OpenBLAS 0.3.32, 6 threads, f32, n=2048: 409.44 GFLOP/s</title></circle>
+<circle cx="862.2" cy="167.4" r="3.5" fill="#1a1a19" stroke="#d95926" stroke-width="2"><title>OpenBLAS 0.3.32, 6 threads, f32, n=3072: 425.79 GFLOP/s</title></circle>
+<circle cx="888.0" cy="167.2" r="3.5" fill="#1a1a19" stroke="#d95926" stroke-width="2"><title>OpenBLAS 0.3.32, 6 threads, f32, n=4096: 428.61 GFLOP/s</title></circle>
+</svg>

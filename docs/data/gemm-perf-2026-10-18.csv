@@ -1,0 +1,8 @@
+variant,threads,gflops_1024,ghz,ipc,flop_per_cycle_per_core,llc_loads_per_kilo_instruction,l2_miss_stall_share,context_switches
+NaiveIjk,1,0.84,2.58,0.9,0.326,190.322,0.4206,230
+ScalarIkj,1,3.349,2.58,2.49,1.298,5.817,0.0791,220
+BlockedPortable,1,5.186,2.581,3.379,2.01,0.403,0.0189,196
+BlockedAvx2,1,33.305,2.58,3.429,12.907,0.709,0.0188,265
+BlockedAvx2Mt,6,167.221,2.571,3.355,10.842,0.625,0.0748,18984
+OpenBlas,1,34.818,2.58,2.987,13.493,0.484,0.0162,310
+OpenBlasMt,6,182.634,2.576,2.962,11.815,0.801,0.0523,1834
