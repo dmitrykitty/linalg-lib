@@ -3,13 +3,17 @@
 
 #include <gtest/gtest.h>
 
+#include <algorithm>
+#include <bit>
 #include <cmath>
+#include <cstdint>
+#include <type_traits>
 #include <cstddef>
-#include <initializer_list>
 #include <limits>
 #include <random>
 #include <stdexcept>
 #include <string>
+#include <thread>
 #include <vector>
 
 namespace {
@@ -103,7 +107,8 @@ void expect_matches_reference(const Strided<T>& a, const Strided<T>& b, const St
 }
 
 template <typename T>
-void check_shape(size_type m, size_type n, size_type k, GemmKernel kernel, size_type padding = 0) {
+void check_shape(size_type m, size_type n, size_type k, GemmKernel kernel, size_type padding = 0,
+                 size_type threads = 0) {
     std::mt19937 engine(static_cast<std::mt19937::result_type>(m * 1'000'003U + n * 1'009U + k));
     const Strided<T> a = random_matrix<T>(m, k, padding, engine);
     const Strided<T> b = random_matrix<T>(k, n, padding, engine);
@@ -117,11 +122,12 @@ void check_shape(size_type m, size_type n, size_type k, GemmKernel kernel, size_
     }
 
     linalg::internal::gemm(m, n, k, a.values.data(), a.stride, b.values.data(), b.stride,
-                           c.values.data(), c.stride, kernel);
+                           c.values.data(), c.stride, kernel, threads);
 
     const std::string context = kernel_name(kernel) + " " + std::to_string(m) + "x" +
                                 std::to_string(n) + "x" + std::to_string(k) +
-                                " padding=" + std::to_string(padding);
+                                " padding=" + std::to_string(padding) +
+                                " threads=" + std::to_string(threads);
     expect_matches_reference(a, b, c, context);
     for (size_type row = 0; row < m; ++row) {
         for (size_type col = n; col < c.stride; ++col) {
@@ -129,6 +135,13 @@ void check_shape(size_type m, size_type n, size_type k, GemmKernel kernel, size_
                                              << col << ")";
         }
     }
+}
+
+// Identical bit patterns, not merely close values (also distinguishes 0.0 from -0.0).
+template <typename T>
+bool same_bits(T left, T right) {
+    using Bits = std::conditional_t<sizeof(T) == 8, std::uint64_t, std::uint32_t>;
+    return std::bit_cast<Bits>(left) == std::bit_cast<Bits>(right);
 }
 
 template <typename T>
@@ -152,17 +165,17 @@ TYPED_TEST(GemmTest, MatchesReferenceForSizesThatAreNotMultiplesOfTheRegisterTil
 }
 
 TYPED_TEST(GemmTest, MatchesReferenceAcrossCacheBlockBoundaries) {
+    const size_type depths_around_kc[] = {255, 256, 257, 513};
+    const size_type rows_around_mc[] = {71, 72, 73, 143, 144, 145, 150}; // mc: 72 double, 144 float
+    const size_type columns_around_nc[] = {4079, 4080, 4081, 8170};
     for (const GemmKernel kernel : available_kernels()) {
-        // Depth around the kc block.
-        for (const size_type k : std::initializer_list<size_type>{255, 256, 257, 513}) {
+        for (const size_type k : depths_around_kc) {
             check_shape<TypeParam>(13, 17, k, kernel);
         }
-        // Rows around the mc block (72 for double, 144 for float).
-        for (const size_type m : std::initializer_list<size_type>{71, 72, 73, 143, 144, 145, 150}) {
+        for (const size_type m : rows_around_mc) {
             check_shape<TypeParam>(m, 9, 5, kernel);
         }
-        // Columns around the nc block.
-        for (const size_type n : std::initializer_list<size_type>{4079, 4080, 4081, 8170}) {
+        for (const size_type n : columns_around_nc) {
             check_shape<TypeParam>(7, n, 3, kernel);
         }
     }
@@ -237,6 +250,78 @@ TYPED_TEST(GemmTest, PublicMultiplyUsesACorrectKernelForLargeMatrices) {
     b.values.assign(right.data(), right.data() + right.size());
     c.values.assign(product.data(), product.data() + product.size());
     expect_matches_reference(a, b, c, "multiply");
+}
+
+TYPED_TEST(GemmTest, MatchesReferenceForEveryThreadCount) {
+    struct Shape {
+        size_type m;
+        size_type n;
+        size_type k;
+    };
+    const Shape shapes[] = {
+        {7, 7, 7},       // fewer micro-tiles than threads
+        {129, 127, 65},  // ragged row and column panels
+        {300, 200, 513}, // several kc panels, so B is re-packed between barriers
+        {6, 4100, 20},   // one row panel: the grid must split columns; crosses nc
+        {1000, 8, 10},   // one column panel: rows only
+        {77, 35, 300},   // with padded strides below
+    };
+    const size_type thread_counts[] = {1, 2, 3, 4, 5, 6, 8, 12};
+    for (const GemmKernel kernel : available_kernels()) {
+        for (const size_type threads : thread_counts) {
+            for (const Shape& shape : shapes) {
+                check_shape<TypeParam>(shape.m, shape.n, shape.k, kernel, 0, threads);
+            }
+            check_shape<TypeParam>(77, 35, 300, kernel, 3, threads);
+        }
+    }
+}
+
+TYPED_TEST(GemmTest, ConcurrentCallersShareThePoolSafely) {
+    // Only one caller can own the pool; the others must fall back to serial execution.
+    std::vector<std::thread> callers;
+    for (size_type caller = 0; caller < 4; ++caller) {
+        callers.emplace_back([caller] {
+            for (size_type repeat = 0; repeat < 3; ++repeat) {
+                check_shape<TypeParam>(150 + caller, 140, 260, GemmKernel::automatic, 0, 6);
+            }
+        });
+    }
+    for (std::thread& caller : callers) {
+        caller.join();
+    }
+}
+
+TYPED_TEST(GemmTest, ResultIsBitwiseIdenticalForEveryThreadCount) {
+    // Threads split only rows and columns of C, never the k dimension, so every element is
+    // accumulated by the same micro-kernel in the same pc order whatever the thread count.
+    using T = TypeParam;
+    const size_type row_counts[] = {6, 150, 333};
+    const size_type parallel_thread_counts[] = {2, 3, 4, 5, 6, 12};
+    std::mt19937 engine(7);
+    for (const GemmKernel kernel : available_kernels()) {
+        for (const size_type m : row_counts) {
+            const size_type n = 4100; // crosses nc, so column groups are exercised as well
+            const size_type k = 300;  // two pc panels
+            const Strided<T> a = random_matrix<T>(m, k, 0, engine);
+            const Strided<T> b = random_matrix<T>(k, n, 0, engine);
+            std::vector<T> serial(m * n);
+            linalg::internal::gemm(m, n, k, a.values.data(), k, b.values.data(), n, serial.data(),
+                                   n, kernel, 1);
+            for (const size_type threads : parallel_thread_counts) {
+                std::vector<T> parallel(m * n);
+                linalg::internal::gemm(m, n, k, a.values.data(), k, b.values.data(), n,
+                                       parallel.data(), n, kernel, threads);
+                ASSERT_TRUE(std::equal(serial.begin(), serial.end(), parallel.begin(),
+                                       same_bits<T>))
+                    << kernel_name(kernel) << " m=" << m << " threads=" << threads;
+            }
+        }
+    }
+}
+
+TEST(GemmKernelTest, DefaultThreadCountIsPositive) {
+    EXPECT_GE(linalg::internal::gemm_default_thread_count(), 1U);
 }
 
 TEST(GemmKernelTest, PortableAndAutomaticKernelsAreAlwaysAvailable) {

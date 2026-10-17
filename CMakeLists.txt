@@ -19,9 +19,11 @@ option(LINALG_BUILD_TESTS "Build the linalg test suite" ${PROJECT_IS_TOP_LEVEL})
 option(LINALG_BUILD_BENCHMARKS "Build the linalg benchmark suite" ${PROJECT_IS_TOP_LEVEL})
 option(LINALG_BUILD_EXAMPLES "Build the linalg examples" ${PROJECT_IS_TOP_LEVEL})
 option(LINALG_FETCH_DEPENDENCIES "Fetch missing development dependencies" ON)
+option(LINALG_BENCHMARK_OPENBLAS "Add OpenBLAS baselines to the GEMM benchmarks when installed" ON)
 option(LINALG_WARNINGS_AS_ERRORS "Treat project warnings as errors" OFF)
 option(LINALG_ENABLE_ASAN "Enable AddressSanitizer" OFF)
 option(LINALG_ENABLE_UBSAN "Enable UndefinedBehaviorSanitizer" OFF)
+option(LINALG_ENABLE_TSAN "Enable ThreadSanitizer" OFF)
 
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -34,6 +36,8 @@ target_sources(
     PRIVATE
         src/gemm.cpp
         src/operations.cpp
+        src/thread_pool.cpp
+        src/thread_pool.hpp
     PUBLIC
         FILE_SET public_headers
         TYPE HEADERS
@@ -52,6 +56,10 @@ target_sources(
 )
 
 target_compile_features(linalg PUBLIC cxx_std_20)
+
+# The blocked GEMM runs on a persistent std::jthread pool.
+find_package(Threads REQUIRED)
+target_link_libraries(linalg PRIVATE Threads::Threads)
 
 target_include_directories(
     linalg
