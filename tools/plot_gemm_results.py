@@ -122,7 +122,7 @@ def summarize(results_dir: Path, date: str) -> tuple[Path, Path]:
                 "cv_real_time": round(cv["real_time"], 4),
             })
     with summary_path.open("w", newline="") as file:
-        writer = csv.DictWriter(file, fieldnames=list(rows[0]))
+        writer = csv.DictWriter(file, fieldnames=list(rows[0]), lineterminator="\n")
         writer.writeheader()
         writer.writerows(sorted(rows, key=lambda r: (r["group"], r["family"], r["m"], r["n"],
                                                        r["k"], r["threads"])))
@@ -157,7 +157,7 @@ def summarize(results_dir: Path, date: str) -> tuple[Path, Path]:
     order = list(VARIANTS)
     perf_rows.sort(key=lambda r: order.index(r["variant"]))
     with perf_path.open("w", newline="") as file:
-        writer = csv.DictWriter(file, fieldnames=list(perf_rows[0]))
+        writer = csv.DictWriter(file, fieldnames=list(perf_rows[0]), lineterminator="\n")
         writer.writeheader()
         writer.writerows(perf_rows)
     return summary_path, perf_path
