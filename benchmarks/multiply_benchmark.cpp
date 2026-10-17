@@ -5,6 +5,7 @@
 #include <benchmark/benchmark.h>
 
 #include <cstdint>
+#include <thread>
 
 
 namespace {
@@ -240,41 +241,41 @@ void BM_MatMulLibraryEndToEnd(benchmark::State& state) {
 }
 
 void gemm_into(Matrix& result, const Matrix& left, const Matrix& right,
-               linalg::internal::GemmKernel kernel) {
+               linalg::internal::GemmKernel kernel, size_type threads) {
     linalg::internal::gemm(left.rows(), right.cols(), left.cols(), left.data(), left.cols(),
-                           right.data(), right.cols(), result.data(), result.cols(), kernel);
+                           right.data(), right.cols(), result.data(), result.cols(), kernel,
+                           threads);
 }
 
-// The kernel used by linalg::multiply for dynamic matrices (blocked GEMM, best micro-kernel).
+// The path used by linalg::multiply for dynamic matrices: blocked GEMM, best micro-kernel, and
+// the automatic thread count. Registered with UseRealTime() because work runs on pool threads.
+// The per-kernel blocked variants (portable, AVX2, 1 or all cores) live in
+// gemm_comparison_benchmark.cpp.
 void BM_MatMulLibraryKernel(benchmark::State& state) {
     benchmark_kernel(state, [](Matrix& result, const Matrix& left, const Matrix& right) {
-        gemm_into(result, left, right, linalg::internal::GemmKernel::automatic);
+        gemm_into(result, left, right, linalg::internal::GemmKernel::automatic, 0);
     });
 }
 
-// Blocked + packed GEMM with the plain C++ micro-kernel (compiler auto-vectorization only).
-void BM_MatMulBlockedPortableKernel(benchmark::State& state) {
-    benchmark_kernel(state, [](Matrix& result, const Matrix& left, const Matrix& right) {
-        gemm_into(result, left, right, linalg::internal::GemmKernel::portable);
-    });
-}
-
-// Blocked + packed GEMM with the hand-written AVX2/FMA micro-kernel.
-void BM_MatMulBlockedAvx2FmaKernel(benchmark::State& state) {
+// AVX2/FMA GEMM with an explicit thread count in the fourth argument (M/N/K/threads).
+void BM_MatMulBlockedAvx2FmaThreads(benchmark::State& state) {
     if (!linalg::internal::gemm_kernel_available(linalg::internal::GemmKernel::avx2_fma)) {
         state.SkipWithError("AVX2/FMA is not supported by this CPU");
         return;
     }
-    benchmark_kernel(state, [](Matrix& result, const Matrix& left, const Matrix& right) {
-        gemm_into(result, left, right, linalg::internal::GemmKernel::avx2_fma);
+    const auto threads = static_cast<size_type>(state.range(3));
+    // gemm() caps the thread count at the logical CPU count, so larger requests would silently
+    // repeat a smaller measurement (for example 12 threads with SMT disabled).
+    if (threads > std::thread::hardware_concurrency()) {
+        state.SkipWithMessage("more threads requested than logical CPUs are online");
+        return;
+    }
+    benchmark_kernel(state, [threads](Matrix& result, const Matrix& left, const Matrix& right) {
+        gemm_into(result, left, right, linalg::internal::GemmKernel::avx2_fma, threads);
     });
-}
-
-// The previous library default (scalar ikj), kept as the constexpr static-matrix kernel.
-void BM_MatMulScalarIkjLibraryKernel(benchmark::State& state) {
-    benchmark_kernel(state, [](Matrix& result, const Matrix& left, const Matrix& right) {
-        linalg::internal::matmul_into(left, right, result);
-    });
+    // Not "threads": Google Benchmark already writes a "threads" field (its own benchmark threads)
+    // into the JSON, and a counter of the same name would duplicate the key.
+    state.counters["gemm_threads"] = static_cast<double>(threads);
 }
 
 void BM_MatMulIjkKernel(benchmark::State& state) {
@@ -319,16 +320,33 @@ void add_large_square_sizes(benchmark::Benchmark* registration) {
     registration->Args({2048, 2048, 2048});
 }
 
+// Thread scaling: 1..6 physical cores, plus 12 to show the effect of SMT siblings. Run with
+// SMT disabled (or a taskset over one thread per core) when measuring physical-core scaling.
+void add_thread_scaling_sizes(benchmark::Benchmark* registration) {
+    for (const std::int64_t threads : {1, 2, 3, 4, 5, 6, 12}) {
+        registration->Args({256, 256, 256, threads});
+        registration->Args({512, 512, 512, threads});
+        registration->Args({1024, 1024, 1024, threads});
+        registration->Args({2048, 2048, 2048, threads});
+    }
+    for (const std::int64_t threads : {1, 6}) {
+        // Small squares locate the serial/parallel crossover used by the automatic thread count.
+        for (const std::int64_t size : {64, 96, 128, 160, 192}) {
+            registration->Args({size, size, size, threads});
+        }
+        registration->Args({64, 1024, 1024, threads});
+        registration->Args({1024, 64, 1024, threads});
+        registration->Args({1024, 1024, 64, threads});
+    }
+}
+
 BENCHMARK(BM_MatMulReferenceEndToEnd)->Apply(add_matmul_sizes);
-BENCHMARK(BM_MatMulLibraryEndToEnd)->Apply(add_matmul_sizes);
-BENCHMARK(BM_MatMulLibraryKernel)->Apply(add_matmul_sizes)->Apply(add_large_square_sizes);
-BENCHMARK(BM_MatMulBlockedPortableKernel)
+BENCHMARK(BM_MatMulLibraryEndToEnd)->Apply(add_matmul_sizes)->UseRealTime();
+BENCHMARK(BM_MatMulLibraryKernel)
     ->Apply(add_matmul_sizes)
-    ->Apply(add_large_square_sizes);
-BENCHMARK(BM_MatMulBlockedAvx2FmaKernel)
-    ->Apply(add_matmul_sizes)
-    ->Apply(add_large_square_sizes);
-BENCHMARK(BM_MatMulScalarIkjLibraryKernel)->Apply(add_matmul_sizes);
+    ->Apply(add_large_square_sizes)
+    ->UseRealTime();
+BENCHMARK(BM_MatMulBlockedAvx2FmaThreads)->Apply(add_thread_scaling_sizes)->UseRealTime();
 BENCHMARK(BM_MatMulIjkKernel)->Apply(add_matmul_sizes)->Apply(add_large_square_sizes);
 BENCHMARK(BM_MatMulIkjKernel)->Apply(add_matmul_sizes)->Apply(add_large_square_sizes);
 BENCHMARK(BM_MatMulJikKernel)->Apply(add_matmul_sizes);
