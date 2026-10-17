@@ -44,6 +44,16 @@
         "LINALG_ENABLE_ASAN": "ON",
         "LINALG_ENABLE_UBSAN": "ON"
       }
+    },
+    {
+      "name": "tsan",
+      "displayName": "Optimized debug-info build with ThreadSanitizer",
+      "inherits": "base",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+        "LINALG_BUILD_BENCHMARKS": "OFF",
+        "LINALG_ENABLE_TSAN": "ON"
+      }
     }
   ],
   "buildPresets": [
@@ -58,6 +68,10 @@
     {
       "name": "sanitized",
       "configurePreset": "sanitized"
+    },
+    {
+      "name": "tsan",
+      "configurePreset": "tsan"
     }
   ],
   "testPresets": [
@@ -81,7 +95,13 @@
       "output": {
         "outputOnFailure": true
       }
+    },
+    {
+      "name": "tsan",
+      "configurePreset": "tsan",
+      "output": {
+        "outputOnFailure": true
+      }
     }
   ]
 }
-

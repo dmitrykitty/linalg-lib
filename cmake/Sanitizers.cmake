@@ -1,6 +1,10 @@
 function(linalg_enable_sanitizers target_name)
-    if(NOT LINALG_ENABLE_ASAN AND NOT LINALG_ENABLE_UBSAN)
+    if(NOT LINALG_ENABLE_ASAN AND NOT LINALG_ENABLE_UBSAN AND NOT LINALG_ENABLE_TSAN)
         return()
+    endif()
+
+    if(LINALG_ENABLE_TSAN AND LINALG_ENABLE_ASAN)
+        message(FATAL_ERROR "ThreadSanitizer cannot be combined with AddressSanitizer")
     endif()
 
     if(NOT CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
@@ -13,6 +17,9 @@ function(linalg_enable_sanitizers target_name)
     endif()
     if(LINALG_ENABLE_UBSAN)
         list(APPEND enabled_sanitizers undefined)
+    endif()
+    if(LINALG_ENABLE_TSAN)
+        list(APPEND enabled_sanitizers thread)
     endif()
     list(JOIN enabled_sanitizers "," sanitizer_list)
 

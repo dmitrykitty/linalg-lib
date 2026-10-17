@@ -36,3 +36,30 @@ jobs:
       - name: Benchmark framework smoke check
         run: ./build/release/benchmarks/linalg_benchmarks --benchmark_dry_run --benchmark_filter='-/2048/'
 
+
+  sanitizers:
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        preset:
+          - sanitized
+          - tsan
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      # Newer runner kernels use more mmap randomness than ThreadSanitizer supports.
+      - name: Reduce ASLR entropy for ThreadSanitizer
+        if: matrix.preset == 'tsan'
+        run: sudo sysctl vm.mmap_rnd_bits=28
+
+      - name: Configure
+        run: cmake --preset ${{ matrix.preset }}
+
+      - name: Build
+        run: cmake --build --preset ${{ matrix.preset }} --parallel 2
+
+      - name: Test
+        run: ctest --preset ${{ matrix.preset }}
