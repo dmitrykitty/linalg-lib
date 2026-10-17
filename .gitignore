@@ -70,6 +70,9 @@ core.*
 /.cache/
 /.clangd/
 
+# Private project planning, theory, and milestone notes.
+/notes/
+
 # Local Codex/agent instructions and daily scratch plans
 /AGENTS.md
 /AGENTS_URGENT.md
