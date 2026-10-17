@@ -1,3 +1,4 @@
+#include <linalg/internal/gemm.hpp>
 #include <linalg/matrix.hpp>
 #include <linalg/operations.hpp>
 
@@ -238,7 +239,39 @@ void BM_MatMulLibraryEndToEnd(benchmark::State& state) {
     });
 }
 
+void gemm_into(Matrix& result, const Matrix& left, const Matrix& right,
+               linalg::internal::GemmKernel kernel) {
+    linalg::internal::gemm(left.rows(), right.cols(), left.cols(), left.data(), left.cols(),
+                           right.data(), right.cols(), result.data(), result.cols(), kernel);
+}
+
+// The kernel used by linalg::multiply for dynamic matrices (blocked GEMM, best micro-kernel).
 void BM_MatMulLibraryKernel(benchmark::State& state) {
+    benchmark_kernel(state, [](Matrix& result, const Matrix& left, const Matrix& right) {
+        gemm_into(result, left, right, linalg::internal::GemmKernel::automatic);
+    });
+}
+
+// Blocked + packed GEMM with the plain C++ micro-kernel (compiler auto-vectorization only).
+void BM_MatMulBlockedPortableKernel(benchmark::State& state) {
+    benchmark_kernel(state, [](Matrix& result, const Matrix& left, const Matrix& right) {
+        gemm_into(result, left, right, linalg::internal::GemmKernel::portable);
+    });
+}
+
+// Blocked + packed GEMM with the hand-written AVX2/FMA micro-kernel.
+void BM_MatMulBlockedAvx2FmaKernel(benchmark::State& state) {
+    if (!linalg::internal::gemm_kernel_available(linalg::internal::GemmKernel::avx2_fma)) {
+        state.SkipWithError("AVX2/FMA is not supported by this CPU");
+        return;
+    }
+    benchmark_kernel(state, [](Matrix& result, const Matrix& left, const Matrix& right) {
+        gemm_into(result, left, right, linalg::internal::GemmKernel::avx2_fma);
+    });
+}
+
+// The previous library default (scalar ikj), kept as the constexpr static-matrix kernel.
+void BM_MatMulScalarIkjLibraryKernel(benchmark::State& state) {
     benchmark_kernel(state, [](Matrix& result, const Matrix& left, const Matrix& right) {
         linalg::internal::matmul_into(left, right, result);
     });
@@ -279,11 +312,25 @@ void add_matmul_sizes(benchmark::Benchmark* registration) {
     registration->Args({1024, 1024, 64});
 }
 
+// Square baseline for "naive ijk vs ikj vs blocked" comparisons. 2048^3 naive ijk takes tens of
+// seconds per iteration; filter these out for quick runs with --benchmark_filter='-/2048/'.
+void add_large_square_sizes(benchmark::Benchmark* registration) {
+    registration->Args({1024, 1024, 1024});
+    registration->Args({2048, 2048, 2048});
+}
+
 BENCHMARK(BM_MatMulReferenceEndToEnd)->Apply(add_matmul_sizes);
 BENCHMARK(BM_MatMulLibraryEndToEnd)->Apply(add_matmul_sizes);
-BENCHMARK(BM_MatMulLibraryKernel)->Apply(add_matmul_sizes);
-BENCHMARK(BM_MatMulIjkKernel)->Apply(add_matmul_sizes);
-BENCHMARK(BM_MatMulIkjKernel)->Apply(add_matmul_sizes);
+BENCHMARK(BM_MatMulLibraryKernel)->Apply(add_matmul_sizes)->Apply(add_large_square_sizes);
+BENCHMARK(BM_MatMulBlockedPortableKernel)
+    ->Apply(add_matmul_sizes)
+    ->Apply(add_large_square_sizes);
+BENCHMARK(BM_MatMulBlockedAvx2FmaKernel)
+    ->Apply(add_matmul_sizes)
+    ->Apply(add_large_square_sizes);
+BENCHMARK(BM_MatMulScalarIkjLibraryKernel)->Apply(add_matmul_sizes);
+BENCHMARK(BM_MatMulIjkKernel)->Apply(add_matmul_sizes)->Apply(add_large_square_sizes);
+BENCHMARK(BM_MatMulIkjKernel)->Apply(add_matmul_sizes)->Apply(add_large_square_sizes);
 BENCHMARK(BM_MatMulJikKernel)->Apply(add_matmul_sizes);
 BENCHMARK(BM_MatMulJkiKernel)->Apply(add_matmul_sizes);
 BENCHMARK(BM_MatMulKijKernel)->Apply(add_matmul_sizes);
